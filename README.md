@@ -130,7 +130,7 @@ The development approach prioritises:
 
 Source code, examples, test results, and technical documentation will be added as they are prepared and verified.
 
-Licence: To be determined before public release.
+Licence: GNU GLP v3.
 
 ---
 
