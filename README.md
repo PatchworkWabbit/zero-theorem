@@ -1,5 +1,4 @@
-# zero-theorem
-Zero Theorem
+# Zero Theorem
 
 Emergent Information Engine
 
@@ -8,7 +7,7 @@ Current development version: V4.5.1
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
-Overview
+## Overview
 
 Zero Theorem is an experimental mathematical and computational engine exploring how states, operations, and interconnected pathways can emerge from a minimal foundation.
 
@@ -20,7 +19,44 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-1. Foundational Principles
+## Running V4.5.1
+
+The runnable file is [zero_theoremV4.5.1.py](zero_theoremV4.5.1.py). It uses Python 3 and the standard library only; no packages, API keys, or network connection are needed to run it.
+
+Download the file into a writable folder. From that folder, run:
+
+```bash
+python3 zero_theoremV4.5.1.py
+```
+
+If your Python 3 command is `python`, use `python zero_theoremV4.5.1.py`. On Android, open the saved file in Pydroid3 and run it.
+
+Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
+
+Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
+
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.5.1. Older header comments also refer to V4.5/V4.4. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+
+For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
+
+### Archive queries
+
+Enter these at the prompt after a run, rather than as command-line arguments:
+
+| Input | Behaviour |
+| --- | --- |
+| `5`, `1/2`, `.8` | Look up a rational value and its recorded expressions |
+| `i`, `-i`, `2+3i`, `1/2-4i` | Look up a complex value |
+| `index` or `values` | List archived rational values (up to 120 entries) |
+| `index -10 10` | List rational values within an inclusive range |
+| `gaps -30 30` | List integers in the range that are absent from the rational archive |
+| `complex-index` | List complex values (up to 100 entries) |
+| `hubs` or `attractors` | Show observational convergence and echo counts |
+| `echoes` | Show the summary plus retained echo examples |
+
+Queries browse existing records; they do not launch a search for the entered value. An absent value is not evidence of unreachability.
+
+## 1. Foundational Principles
 
 The original model establishes the following sequence:
 
@@ -35,20 +71,22 @@ The original model establishes the following sequence:
 
 The foundation is intended to remain stable while experimental modules are developed around it.
 
-2. Numerical Transformation
+## 2. Numerical Transformation
 
 One defined transformation expands numerical values into corresponding unit slots while preserving zero positions.
 
 Example:
 
+```text
 Input:  00404
 Output: 00111101111
+```
 
 Each nonzero digit is expanded into that number of unit symbols. Zero positions remain represented.
 
 This operation is investigated as a numerical representation and transformation mechanism.
 
-3. Zero Lifecycle
+## 3. Zero Lifecycle
 
 Zero operations receive distinct identities so their usage and availability can be recorded across generations.
 
@@ -58,44 +96,50 @@ Z0, Z1, Z2, Z3, ...
 
 The system distinguishes the persistent foundational concept of zero from individual operational records.
 
-4. Mathematical Pathways
+## 4. Mathematical Pathways
 
 The engine explores alternative arithmetic routes and records their relationships.
 
 Pathway exploration includes:
 
-- Target-based arithmetic searches.
-- Target-free tangent exploration.
+- Target-free tangent exploration. Earlier V2.x versions included target-based searches; this V4.5.1 script has no target-search command.
 - Interconnected results and reusable values.
 - Candidate operations derived from observations.
 - Path ancestry and provenance.
 - Bounded search for practical execution.
+- Exact rational arithmetic, including negative results.
+- A separate exact complex branch using rational real and imaginary components. The elements `i` and `-i` are explicitly seeded extensions, not derived from zero or the state-count rule.
+- Observational convergence hubs, real structural echoes (matching operator-tree shapes with opposite results), and complex conjugate echoes.
 
-Different pathways producing the same numerical result are not automatically treated as equivalent computational histories.
+Different pathways producing the same numerical result are not automatically treated as equivalent computational histories. Rational expression identity includes both the construction tree and pathway rule; archive counts are not counts of algebraically unique formulas.
 
-5. Persistent Memory and Indexing
+Observer proposals record value, variable, and operation-selection roles. They are candidates, not automatically adopted foundational rules. Zero-assisted denominator replacements are also recorded as unapproved observations; division by zero is blocked.
+
+## 5. Persistent Memory and Indexing
 
 The engine supports persistent JSON memory and indexed records to retain information across executions.
 
-These records support exploration continuity, repeated-route identification, and inspection of earlier results.
+These records support exploration continuity, repeated-route identification, and inspection of earlier results. The queue and archives persist between runs. Work per run is bounded, but accumulated memory size and load/save time are not globally capped.
 
-V4.5.1 Reported Milestone
+The genesis journal records logical event order with a per-run event cap; excess journal events are counted as suppressed. Earlier precise event ordering is not reconstructed when older memory is upgraded. Expression ancestry and the discovery index do not constitute a complete historical event log.
+
+### V4.5.1 Reported Milestone
 
 A recorded execution reported:
 
+```text
 Foundation: 0 through 21
 Zero records: Z0 through Z21
-Exact arithmetic checks: PASS
-Foundation checks: PASS
+Exact arithmetic and foundation checks: PASS
+```
 
-These results describe the observed execution and its implemented checks. Independent reproduction and broader validation remain future work.
+These results describe a previously reported continued execution, not the expected output of a fresh first run. The startup PASS message checks the consecutive foundation sequence, matching zero-record IDs, the `00404` transformation, and one exact fraction addition. It is not a full validation of every archived expression or subsystem. Broader independent validation remains future work.
 
-6. Research Directions
+## 6. Research Directions
 
 Planned or proposed investigations include:
 
-- Negative-number operations.
-- Imaginary and complex-number extensions.
+- Broader validation and exploration of the implemented negative and complex branches.
 - Unbounded and symbolic exploration.
 - Mathematical pattern identification.
 - Candidate-operation validation.
@@ -105,7 +149,7 @@ Planned or proposed investigations include:
 
 These directions are research objectives, not claims of completed capabilities.
 
-7. Mathematical Status
+## 7. Mathematical Status
 
 Zero Theorem is currently an experimental computational framework.
 
@@ -113,7 +157,7 @@ Successful executions and internal consistency checks demonstrate specific imple
 
 The project is intended to support reproducible experimentation, rigorous testing, and mathematical investigation.
 
-8. Development Philosophy
+## 8. Development Philosophy
 
 Precise foundations. Emergent possibilities. Preserved information.
 
@@ -126,11 +170,13 @@ The development approach prioritises:
 - Recording computational ancestry.
 - Allowing results to be discovered rather than forced.
 
-9. Publication
+## 9. Publication
 
-Source code, examples, test results, and technical documentation will be added as they are prepared and verified.
+The V4.5.1 prototype source is included in this repository. Further examples, test results, and technical documentation will be added as they are prepared and verified.
 
-Licence: GNU GLP v3.
+Contribution ideas, questions, and fixes are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Licence: GNU General Public License v3.0 (GPLv3); see [LICENSE](LICENSE).
 
 ---
 
