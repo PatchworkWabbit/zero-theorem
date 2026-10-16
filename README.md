@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.6.3
+Current development version: V4.6.4
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,9 +19,9 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.6.3
+## Running V4.6.4
 
-The runnable file is [zero_theoremV4.6.3.py](zero_theoremV4.6.3.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
+The runnable file is [zero_theoremV4.6.4.py](zero_theoremV4.6.4.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -29,27 +29,63 @@ python3 -m pip install -r requirements.txt
 
 On Android, open Pydroid3's Pip screen and install `sympy`. Then open and run the script. After installation, exploration works offline with no API key or subscription. The extension was tested with SymPy 1.14.0.
 
-V4.6.3 is a separate script; the earlier script is retained as a code backup.
+V4.6.4 is a separate script; the earlier script is retained as a code backup.
 
 Download the file into a writable folder. From that folder, run:
 
 ```bash
-python3 zero_theoremV4.6.3.py
+python3 zero_theoremV4.6.4.py
 ```
 
-If your Python 3 command is `python`, use `python zero_theoremV4.6.3.py`. On Android, open the saved file in Pydroid3 and run it.
+If your Python 3 command is `python`, use `python zero_theoremV4.6.4.py`. On Android, open the saved file in Pydroid3 and run it.
 
 Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.3. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.4. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
 
+### V4.6.4 construction-complete imports, unified queries and whole-engine tracking
+
+V4.6.4 addresses archive and tracking connections while retaining the definitions of the mathematical operations. Validation includes **25 passing regression tests**, actual continuation runs, upgrade exercises and interactive/standalone command checks. See [VALIDATION_V4.6.4.md](VALIDATION_V4.6.4.md) for the scope and limits.
+
+#### Every source construction can enter symbolic exploration
+
+Imports now scan **expression IDs**, rather than taking one representative per value. Two records with equal values retain separate source links and symbolic records when they represent different constructions. Their operand order, construction trees, zero leaves, source IDs and inherited depth are retained.
+
+Both rational and complex source constructions are included. Old representative imports remain archived. Where an older complex import retained only a simplified value, a separate complete import is added; the older record and any historical nexus references remain unchanged.
+
+The source-to-symbolic link map is explicit and persistent. Numeric records that merely embed an existing symbolic construction link back to that symbolic origin, preventing endless symbolic-to-numeric-to-symbolic copies. These representation links do not collapse distinct arithmetic constructions.
+
+Imports are bounded by `SYMBOLIC_IMPORT_PER_RUN` source records per numeric archive. Persisted construction cursors cover the backlog across subsequent runs. Records outside configured depth/value limits remain in their source archive and are listed in `import_deferred`; changes to import-relevant limits restart a source scan so those records can be reconsidered. Imported records at the exploration depth limit remain archived under the existing feedback limits.
+
+#### Value queries include all archives
+
+An ordinary query such as `2` now includes rational, complex and symbolic records for that value. A symbolic construction `sqrt(2)*sqrt(2)` remains visible even when `2` was already known in the native numeric archives. Queries such as `2+0i` and `symbolic sqrt(2)**2` use the same lookup.
+
+The unified index retains typed archive IDs rather than merging the records themselves. Representation records are labelled, so totals are not presented as counts of algebraically unique formulas. Exact Gaussian-rational results are normalized consistently across branches; general algebraic equivalence is not completely decided by this index.
+
+The existing domain-specific discovery indexes remain available. Value queries and counter reports are read-only and do not launch new exploration.
+
+#### Complete accounting with explicit historical scope
+
+The original `network` counters remain as legacy rational recorded-transition counters. The new `archive_integration` tracking distinguishes:
+
+- **Accepted archive records:** rebuilt from all stored rational, complex and symbolic records, with categories for foundations, seeds, representations, arithmetic and nexus constructions.
+- **Runtime mathematical kernel calls:** counted from the tracking boundary onward across all three domains, with computed, blocked and resource-limited outcomes, operation names and execution contexts.
+- **Nexus records and task activity:** retained in their existing event/ledger structures and displayed alongside the new totals.
+
+A recorded construction's outer operation and an actual runtime call are different measurements. Repeated calculations, blocked operations and nexus tree reevaluations contribute runtime calls even when no new expression is accepted. Mathematical proposal calculations retain their proposal context; they are not promoted into accepted discoveries. Backend implementation steps inside Fraction or SymPy are not counted as separate engine operations.
+
+Counters continue updating when journal details are suppressed. Historical accepted-record totals are reconstructible; historical attempted/failed calls are not fabricated from surviving expressions.
+
+Use `operations` or `totals` at the query prompt to inspect these measurements.
+
 ### V4.6.3 resumable budgets, typed tracking and link audit
 
-This patch was edited and inspected statically. Neither the engine nor the new link checker has been executed; regression tests remain deferred.
+At the V4.6.3 release, this patch had only been inspected statically. The later V4.6.4 validation includes actual V4.6.3 baseline executions and link audits, plus the current regression suite.
 
 A work budget means a workload allowance per execution. The phone-oriented limits remain configurable. They are separate from the bug where a partially completed arithmetic pair could abort before saving the run.
 
@@ -60,7 +96,7 @@ New parent-ledger rows use archive-qualified labels such as `rational:17`, `comp
 The new read-only structural command is:
 
 ```bash
-python3 zero_theoremV4.6.3.py --integrity
+python3 zero_theoremV4.6.4.py --integrity
 ```
 
 It loads existing saved memory without launching exploration, upgrading memory, saving changes or evaluating mathematical expressions. This command alone uses the standard library; normal exploration still requires SymPy. With no saved memory, it reports that there is no archive to inspect. `integrity` is also available at the interactive query prompt, after a normal exploration run.
@@ -73,7 +109,7 @@ The checker inspects the currently saved graph. It does not enumerate all possib
 
 ### V4.6.2 zero archive access, lineage and feedback
 
-This patch has been edited and read, but has **not been executed or regression-tested**. The instruction to defer test runs remains in effect.
+At this release, execution and regression tests were deferred. The later V4.6.4 validation covers the continued zero-archive-access implementation.
 
 The rational zero-nexus scheduler no longer checks only the first 30 expressions or searches expression text for the character `0`. It inspects numerical leaves in construction trees. A leaf with value 10 is therefore not confused with a zero operand.
 
@@ -94,7 +130,7 @@ This patch adds persisted task kinds. After it saves memory, continue with V4.6.
 
 ### V4.6.1 zero-nexus connection
 
-This patch connects the exact powers/root branch to zero-slot constructions. It has been edited and read, but has **not been executed or regression-tested**, following the current development instruction to defer tests until the agreed basic-operation connections are complete.
+This patch connected the exact powers/root branch to zero-slot constructions. Tests were deferred at that release; the later V4.6.4 validation covers the continued implementation.
 
 The extension retains a construction tree separately from each simplified symbolic value. A construction that evaluates to zero still retains its original zero leaves, operators and operand order. Existing V4.6 records receive these trees using their stored parents and source references.
 
@@ -116,7 +152,7 @@ V4.6 adds an exact algebraic archive using SymPy. Its active operations are `+`,
 
 Each eligible symbolic expression is queued for a square root and resumable binary feedback. Self-pairs are visited first, followed by earlier expressions; distinct operands retain both orders. One operation is attempted per symbolic task. Construction expressions and parent IDs remain separate from simplified result forms, so `sqrt(2)*sqrt(2)` records its construction even when its value simplifies to `2`.
 
-The rational and complex archives contribute representative values through persisted import cursors, up to `SYMBOLIC_IMPORT_PER_RUN` entries per source archive per run. Every original expression stays in its source archive; this is not a copy of every derivation. Source backlogs and values created later in a run are imported on subsequent runs.
+In V4.6 through V4.6.3, the rational and complex archives contributed representative values through import cursors. V4.6.4 replaces that selection with construction-by-construction source scans, as described above. Every original expression stays in its source archive.
 
 Symbolic results that evaluate exactly to a new rational value or a complex value with rational components are embedded into the corresponding numeric archive. Typed source references retain their symbolic origins, and construction depth is preserved across the bridge. Existing numeric values keep their original entries; further symbolic derivations remain in the symbolic archive.
 
@@ -147,7 +183,7 @@ V4.5.2 connected generated complex expressions to subsequent complex calculation
 python3 -m unittest discover -p 'test_*.py' -v
 ```
 
-The existing checks target the V4.6 baseline and cover exact algebraic calculations, generated-result feedback, both numeric archive bridges, older-memory augmentation, serialization, continuation, domain/resource limits and restricted read-only queries. They have not been changed or run for V4.6.1. The zero-nexus patch is awaiting the later validation phase.
+The 25 current checks target V4.6.4. They cover exact arithmetic, feedback, archive bridges, distinct equal-valued constructions, complex operand order, unified queries, cross-domain counters, older-memory upgrades, serialization, forced budget pauses, import-loop prevention, deferred imports and structural audits. Details are in [VALIDATION_V4.6.4.md](VALIDATION_V4.6.4.md).
 
 ### Archive queries
 
@@ -155,12 +191,13 @@ Enter these at the prompt after a run, rather than as command-line arguments:
 
 | Input | Behaviour |
 | --- | --- |
-| `5`, `1/2`, `.8` | Look up a rational value and its recorded expressions |
-| `i`, `-i`, `2+3i`, `1/2-4i` | Look up a complex value |
+| `5`, `1/2`, `.8` | Look up the value and matching records across all three archives |
+| `i`, `-i`, `2+3i`, `1/2-4i` | Look up a complex value across all three archives |
 | `index` or `values` | List archived rational values (up to 120 entries) |
 | `index -10 10` | List rational values within an inclusive range |
 | `gaps -30 30` | List integers in the range that are absent from the rational archive |
 | `complex-index` | List complex values (up to 100 entries) |
+| `operations` or `totals` | Show cross-domain runtime and accepted-archive totals |
 | `integrity` | Inspect saved record links and dependency structure without generating expressions |
 | `symbolic-index` | List up to 100 stored exact algebraic forms |
 | `symbolic sqrt(2)`, `symbolic 2**3`, `symbolic sqrt(-2)` | Look up exact algebraic forms and their recorded constructions |
