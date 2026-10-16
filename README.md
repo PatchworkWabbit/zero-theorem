@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.5.1
+Current development version: V4.5.2
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,7 +19,7 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.5.1
+## Running V4.5.2
 
 The runnable file is [zero_theoremV4.5.1.py](zero_theoremV4.5.1.py). It uses Python 3 and the standard library only; no packages, API keys, or network connection are needed to run it.
 
@@ -35,9 +35,25 @@ Each execution performs a bounded exploration batch, saves memory, and then open
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.5.1. Older header comments also refer to V4.5/V4.4. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.5.2. Older header comments also refer to V4.5/V4.4. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
+
+### V4.5.2 complex feedback fix
+
+The existing filename is retained so replacing the script is sufficient; the memory schema, version and filename remain unchanged.
+
+Complex expressions now feed back into complex exploration. Each eligible expression is paired with earlier expressions and itself, retaining both operand orders for distinct expressions. For example, `i * i` produces `-1`, and that constructed expression can become an operand in a later calculation.
+
+Existing complex records are retained with their IDs and parent links. Their construction depths are backfilled, and feedback is scheduled once. Pair cursors persist between runs, avoiding an immediate quadratic expansion of pending pairs.
+
+Both original complex tasks and feedback tasks share `COMPLEX_WORK_PER_RUN`. New complex constructions respect `MAX_DEPTH` and `MAX_BITS`; records at the depth limit remain archived. This does not make exploration exhaustive or remove phone resource limits. The rational and complex archives remain separate; this patch adds feedback within the complex branch.
+
+Run the regression checks with:
+
+```bash
+python3 -m unittest discover -p test_complex_feedback.py -v
+```
 
 ### Archive queries
 
