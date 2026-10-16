@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.5.2
+Current development version: V4.6
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,41 +19,72 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.5.2
+## Running V4.6
 
-The runnable file is [zero_theoremV4.5.1.py](zero_theoremV4.5.1.py). It uses Python 3 and the standard library only; no packages, API keys, or network connection are needed to run it.
+The runnable file is [zero_theoremV4.6.py](zero_theoremV4.6.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+On Android, open Pydroid3's Pip screen and install `sympy`. Then open and run the script. After installation, exploration works offline with no API key or subscription. The extension was tested with SymPy 1.14.0.
+
+V4.6 is a separate script; the earlier script is retained as a code backup.
 
 Download the file into a writable folder. From that folder, run:
 
 ```bash
-python3 zero_theoremV4.5.1.py
+python3 zero_theoremV4.6.py
 ```
 
-If your Python 3 command is `python`, use `python zero_theoremV4.5.1.py`. On Android, open the saved file in Pydroid3 and run it.
+If your Python 3 command is `python`, use `python zero_theoremV4.6.py`. On Android, open the saved file in Pydroid3 and run it.
 
 Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.5.2. Older header comments also refer to V4.5/V4.4. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
 
-### V4.5.2 complex feedback fix
+### V4.6 exact powers, roots and symbolic feedback
 
-The existing filename is retained so replacing the script is sufficient; the memory schema, version and filename remain unchanged.
+V4.6 adds an exact algebraic archive using SymPy. Its active operations are `+`, `-`, `*`, `/`, rational powers `**`, and principal square roots `sqrt`. Expressions such as `sqrt(2)` remain exact rather than becoming rounded decimals. This first integration does not enable all SymPy capabilities: free variables, equation solving, trigonometry and calculus are not yet exploration operations.
 
-Complex expressions now feed back into complex exploration. Each eligible expression is paired with earlier expressions and itself, retaining both operand orders for distinct expressions. For example, `i * i` produces `-1`, and that constructed expression can become an operand in a later calculation.
+Each eligible symbolic expression is queued for a square root and resumable binary feedback. Self-pairs are visited first, followed by earlier expressions; distinct operands retain both orders. One operation is attempted per symbolic task. Construction expressions and parent IDs remain separate from simplified result forms, so `sqrt(2)*sqrt(2)` records its construction even when its value simplifies to `2`.
 
-Existing complex records are retained with their IDs and parent links. Their construction depths are backfilled, and feedback is scheduled once. Pair cursors persist between runs, avoiding an immediate quadratic expansion of pending pairs.
+The rational and complex archives contribute representative values through persisted import cursors, up to `SYMBOLIC_IMPORT_PER_RUN` entries per source archive per run. Every original expression stays in its source archive; this is not a copy of every derivation. Source backlogs and values created later in a run are imported on subsequent runs.
 
-Both original complex tasks and feedback tasks share `COMPLEX_WORK_PER_RUN`. New complex constructions respect `MAX_DEPTH` and `MAX_BITS`; records at the depth limit remain archived. This does not make exploration exhaustive or remove phone resource limits. The rational and complex archives remain separate; this patch adds feedback within the complex branch.
+Symbolic results that evaluate exactly to a new rational value or a complex value with rational components are embedded into the corresponding numeric archive. Typed source references retain their symbolic origins, and construction depth is preserved across the bridge. Existing numeric values keep their original entries; further symbolic derivations remain in the symbolic archive.
 
-Run the regression checks with:
+Resource limits include:
+
+- `SYMBOLIC_WORK_PER_RUN = 24` operation tasks, plus bounded source imports.
+- The existing `MAX_DEPTH = 4` and `MAX_BITS = 256`.
+- At most 48 nodes in a simplified symbolic value.
+- Power exponents must be rational, with absolute numerator at most 8 and denominator at most 8.
+- Root operations involving rational components above 32 bits are skipped and counted as resource-limited operations.
+- Division requires a denominator established as nonzero. Zero to a nonpositive power is skipped, including the convention-dependent `0**0`.
+
+The limits bound scheduled work and expression size; they are not hard wall-clock or global-memory guarantees. Square roots and fractional powers use the principal complex branch; for example, `sqrt(-2) = sqrt(2)*I`. No branch-unsafe simplification is forced.
+
+Symbolic values are stored as JSON trees using only rational numbers, `I`, sums, products and powers. Queries use a restricted arithmetic parser; query text and saved expressions are not executed as Python code.
+
+The existing memory filename, schema and version are retained. After V4.6 saves symbolic tasks, continue with V4.6: older scripts do not recognize those tasks. Keep a copy of pre-upgrade memory if you want to resume an older engine separately.
+
+Symbolic index keys are simplified expression forms, not a proof that different keys represent different mathematical values. Algebraically equivalent forms can have separate keys.
+
+### Earlier complex feedback fix
+
+V4.5.2 connected generated complex expressions to subsequent complex calculations, including self-pairs such as `i*i`. V4.6 retains that feedback, persistent pair cursors and depth checks. Existing archived expressions are preserved with their IDs and parent links.
+
+### Regression checks
 
 ```bash
-python3 -m unittest discover -p test_complex_feedback.py -v
+python3 -m unittest discover -p 'test_*.py' -v
 ```
+
+The checks cover exact algebraic calculations, generated-result feedback, both numeric archive bridges, older-memory augmentation, serialization, continuation, domain/resource limits and restricted read-only queries.
 
 ### Archive queries
 
@@ -67,6 +98,8 @@ Enter these at the prompt after a run, rather than as command-line arguments:
 | `index -10 10` | List rational values within an inclusive range |
 | `gaps -30 30` | List integers in the range that are absent from the rational archive |
 | `complex-index` | List complex values (up to 100 entries) |
+| `symbolic-index` | List up to 100 stored exact algebraic forms |
+| `symbolic sqrt(2)`, `symbolic 2**3`, `symbolic sqrt(-2)` | Look up exact algebraic forms and their recorded constructions |
 | `hubs` or `attractors` | Show observational convergence and echo counts |
 | `echoes` | Show the summary plus retained echo examples |
 
@@ -118,13 +151,14 @@ The engine explores alternative arithmetic routes and records their relationship
 
 Pathway exploration includes:
 
-- Target-free tangent exploration. Earlier V2.x versions included target-based searches; this V4.5.1 script has no target-search command.
+- Target-free tangent exploration. Earlier V2.x versions included target-based searches; this V4.6 script has no target-search command.
 - Interconnected results and reusable values.
 - Candidate operations derived from observations.
 - Path ancestry and provenance.
 - Bounded search for practical execution.
 - Exact rational arithmetic, including negative results.
 - A separate exact complex branch using rational real and imaginary components. The elements `i` and `-i` are explicitly seeded extensions, not derived from zero or the state-count rule.
+- Exact algebraic powers and roots, with symbolic feedback and typed numeric archive bridges.
 - Observational convergence hubs, real structural echoes (matching operator-tree shapes with opposite results), and complex conjugate echoes.
 
 Different pathways producing the same numerical result are not automatically treated as equivalent computational histories. Rational expression identity includes both the construction tree and pathway rule; archive counts are not counts of algebraically unique formulas.
@@ -188,7 +222,7 @@ The development approach prioritises:
 
 ## 9. Publication
 
-The V4.5.1 prototype source is included in this repository. Further examples, test results, and technical documentation will be added as they are prepared and verified.
+The V4.6 engine and the earlier V4.5.1/V4.5.2 prototype script are included in this repository. Further examples, test results, and technical documentation will be added as they are prepared and verified.
 
 Contribution ideas, questions, and fixes are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -199,3 +233,4 @@ Licence: GNU General Public License v3.0 (GPLv3); see [LICENSE](LICENSE).
 Zero Theorem — Emergent Information Engine
 
 Original concept developed in 2012. Computational implementation and ongoing research developed subsequently.
+
