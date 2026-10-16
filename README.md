@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.6.2
+Current development version: V4.6.3
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,9 +19,9 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.6.2
+## Running V4.6.3
 
-The runnable file is [zero_theoremV4.6.2.py](zero_theoremV4.6.2.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
+The runnable file is [zero_theoremV4.6.3.py](zero_theoremV4.6.3.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -29,23 +29,47 @@ python3 -m pip install -r requirements.txt
 
 On Android, open Pydroid3's Pip screen and install `sympy`. Then open and run the script. After installation, exploration works offline with no API key or subscription. The extension was tested with SymPy 1.14.0.
 
-V4.6.2 is a separate script; the earlier script is retained as a code backup.
+V4.6.3 is a separate script; the earlier script is retained as a code backup.
 
 Download the file into a writable folder. From that folder, run:
 
 ```bash
-python3 zero_theoremV4.6.2.py
+python3 zero_theoremV4.6.3.py
 ```
 
-If your Python 3 command is `python`, use `python zero_theoremV4.6.2.py`. On Android, open the saved file in Pydroid3 and run it.
+If your Python 3 command is `python`, use `python zero_theoremV4.6.3.py`. On Android, open the saved file in Pydroid3 and run it.
 
 Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.2. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.3. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
+
+### V4.6.3 resumable budgets, typed tracking and link audit
+
+This patch was edited and inspected statically. Neither the engine nor the new link checker has been executed; regression tests remain deferred.
+
+A work budget means a workload allowance per execution. The phone-oriented limits remain configurable. They are separate from the bug where a partially completed arithmetic pair could abort before saving the run.
+
+Pair, frontier and revisit workers now keep an `op_cursor`; rational zero transformations keep a `zero_cursor`. When the expression budget is reached partway through one of these tasks, the current task remains pending with its next operation/slot. The normal save path preserves both completed expressions and the resume position. A paused task receives a pause event rather than a completion event. This handles the known expression-budget exit; it is not a guarantee against unrelated crashes, storage failures or interrupted processes.
+
+New parent-ledger rows use archive-qualified labels such as `rational:17`, `complex:17` and `symbolic:17`. Positional tasks use a qualified reference-slot label. Existing expression IDs stay stable. Earlier untyped ledger rows remain preserved as historical totals; the code does not guess an archive assignment for old mixed aggregates. A boundary record identifies the change.
+
+The new read-only structural command is:
+
+```bash
+python3 zero_theoremV4.6.3.py --integrity
+```
+
+It loads existing saved memory without launching exploration, upgrading memory, saving changes or evaluating mathematical expressions. This command alone uses the standard library; normal exploration still requires SymPy. With no saved memory, it reports that there is no archive to inspect. `integrity` is also available at the interactive query prompt, after a normal exploration run.
+
+The checker builds a typed dependency graph from recorded expression parents and cross-archive source references. It adds dependencies of the declared foundational state-count rule and treats explicitly seeded elements such as `i` and `-i` as declared roots.
+
+Its report covers stored ID positions, missing parent/source references, same-archive parent order, result-index references, zero-record identities, observer and zero-proposal references, nexus-event references, pending task references and selected resume-cursor ranges. A topological walk identifies records in or depending on cycles. Reachability is reported from zero and from the full set of declared roots.
+
+The checker inspects the currently saved graph. It does not enumerate all possible mathematical paths, prove expressions correct, reconstruct suppressed historical events, renumber records or repair broken links. Numeric ID order across different archives is not treated as execution order.
 
 ### V4.6.2 zero archive access, lineage and feedback
 
@@ -137,6 +161,7 @@ Enter these at the prompt after a run, rather than as command-line arguments:
 | `index -10 10` | List rational values within an inclusive range |
 | `gaps -30 30` | List integers in the range that are absent from the rational archive |
 | `complex-index` | List complex values (up to 100 entries) |
+| `integrity` | Inspect saved record links and dependency structure without generating expressions |
 | `symbolic-index` | List up to 100 stored exact algebraic forms |
 | `symbolic sqrt(2)`, `symbolic 2**3`, `symbolic sqrt(-2)` | Look up exact algebraic forms and their recorded constructions |
 | `hubs` or `attractors` | Show observational convergence and echo counts |
