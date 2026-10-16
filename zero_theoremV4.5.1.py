@@ -1,5 +1,5 @@
 # ============================================================
-# ZERO THEOREM V4.5 - EMERGENT ZERO / RABBITHOLES
+# ZERO THEOREM V4.5.2 - EMERGENT ZERO / RABBITHOLES
 # A runnable continuation of V2.2's interconnected architecture
 # ============================================================
 # Python 3 standard library only. Keeps V2.2/V3.x files untouched.
@@ -160,7 +160,7 @@ def rebalance_queue(m):
     Previously completed work is never deleted from the archive.
     """
     pending = m['queue'][m['queue_head']:]
-    kinds = ('frontier', 'pair', 'nexus', 'position', 'complex', 'consume_op',
+    kinds = ('frontier', 'pair', 'nexus', 'position', 'complex', 'complex_feedback', 'consume_op',
              'revisit', 'consume', 'emerge')
     buckets = {kind: deque() for kind in kinds}
     keys = set()
@@ -668,6 +668,9 @@ def complex_record(m, value, expr, parents, op, pathway):
            ai.numerator.bit_length(), ai.denominator.bit_length()) > MAX_BITS:
         return None
     ca = m['complex_archive']
+    depth = 0 if not parents else 1 + max(ca['expressions'][p]['depth'] for p in parents)
+    if depth > MAX_DEPTH:
+        return None
     key = complex_key(ar, ai)
     identity = json.dumps([expr, pathway, parents], separators=(',', ':'))
     if identity in ca['known_keys']: return None
@@ -675,20 +678,73 @@ def complex_record(m, value, expr, parents, op, pathway):
     idx = len(ca['expressions'])
     ca['expressions'].append({'id': idx, 'expr': expr, 'real': encode(ar),
         'imaginary': encode(ai), 'value': key, 'parents': parents,
-        'operation': op, 'pathway': pathway})
+        'operation': op, 'pathway': pathway, 'depth': depth})
     first = key not in ca['results']
     ca['results'].setdefault(key, []).append(idx)
     journal(m, 'complex_expression', complex_id=idx, value=key, expr=expr,
             parents=parents, operation=op, first_value=first)
     if 'v45_observations' in m:
         observe_v45_complex(m, ca['expressions'][-1])
+    if ca.get('feedback_version') == 1:
+        schedule_complex_feedback(m)
     return idx
+
+
+def schedule_complex_feedback(m):
+    """One resumable cursor per eligible expression, including old records.
+
+    Pair each expression with every earlier expression and itself. Later
+    expressions handle their pairs with this one. This avoids creating an
+    entire quadratic list of pending pairs at once.
+    """
+    ca = m['complex_archive']
+    cursor = ca.get('feedback_scheduled_count', 0)
+    while cursor < len(ca['expressions']):
+        rec = ca['expressions'][cursor]
+        if rec['depth'] < MAX_DEPTH:
+            enqueue(m, {'kind': 'complex_feedback', 'source': cursor,
+                        'cursor': 0})
+        cursor += 1
+        ca['feedback_scheduled_count'] = cursor
+
+
+def upgrade_complex_feedback(m):
+    """Add feedback without deleting or renumbering archived expressions."""
+    ca = m['complex_archive']
+    # Existing V4.4/V4.5 records have no depth. Their parents precede them.
+    for rec in ca['expressions']:
+        if 'depth' not in rec:
+            rec['depth'] = (0 if not rec['parents'] else
+                            1 + max(ca['expressions'][p]['depth']
+                                    for p in rec['parents']))
+    ca['feedback_version'] = 1
+    schedule_complex_feedback(m)
+    m['rule_registry'].setdefault('complex_feedback_v452',
+                                  {'status': 'active_exploration_not_foundation'})
+
+
+def work_complex_feedback(m, task, stats):
+    source, cursor = task['source'], task['cursor']
+    if cursor > source:
+        return True
+    # Include self-pairs once; retain both orders for distinct operands.
+    pairs = [(source, cursor)]
+    if source != cursor:
+        pairs.append((cursor, source))
+    for left, right in pairs:
+        work_complex(m, {'left': left, 'right': right}, stats)
+    if cursor < source:
+        enqueue(m, {'kind': 'complex_feedback', 'source': source,
+                    'cursor': cursor + 1})
+    return True
 
 
 def work_complex(m, task, stats):
     ca = m['complex_archive']
     left = ca['expressions'][task['left']]
     right = ca['expressions'][task['right']]
+    if max(left['depth'], right['depth']) + 1 > MAX_DEPTH:
+        return True
     a = number(left['real']), number(left['imaginary'])
     b = number(right['real']), number(right['imaginary'])
     for op in OPERATIONS:
@@ -714,6 +770,12 @@ def upgrade_v44(m):
                                'historical_counts_not_reconstructed': True}
     if 'complex_archive' not in m:
         m['complex_archive'] = {'expressions': [], 'results': {}, 'known_keys': []}
+    # Prepare historical depths before any new records are constructed.
+    for rec in m['complex_archive']['expressions']:
+        if 'depth' not in rec:
+            rec['depth'] = (0 if not rec['parents'] else
+                            1 + max(m['complex_archive']['expressions'][p]['depth']
+                                    for p in rec['parents']))
     m['rule_registry'].setdefault('complex_arithmetic_v44', {'status': 'active_exploration_not_foundation'})
     if not m.get('v44_initialized'):
         journal(m, 'v44_boundary', **m['genesis']['historical_boundary'])
@@ -972,11 +1034,12 @@ def run():
     upgrade_runtime(m)
     upgrade_v44(m)
     upgrade_v45(m)
+    upgrade_complex_feedback(m)
     m['_blocked_keys'] = {(b['left'], b['right'], b['operation'], b['pathway'])
                           for b in m['blocked']}
     stats = {'new': 0, 'observer_added': 0,
-             'processed': {'consume': 0, 'consume_op': 0, 'pair': 0, 'revisit': 0, 'nexus': 0, 'emerge': 0, 'frontier': 0, 'position': 0, 'complex': 0}}
-    print('ZERO THEOREM V4.5.1 - GENESIS / TANGENT / COMPLEX / ECHO / INDEX RABBITHOLES')
+             'processed': {'consume': 0, 'consume_op': 0, 'pair': 0, 'revisit': 0, 'nexus': 0, 'emerge': 0, 'frontier': 0, 'position': 0, 'complex': 0, 'complex_feedback': 0}}
+    print('ZERO THEOREM V4.5.2 - GENESIS / TANGENT / COMPLEX FEEDBACK / ECHO / INDEX RABBITHOLES')
     print('Memory:', memory_path())
     print('Foundation:', f['states'])
     print('Zero records:', [z['id'] for z in f['zero_records']])
@@ -1000,6 +1063,13 @@ def run():
         if stats['new'] >= MAX_NEW_EXPRESSIONS_PER_RUN: break
         task = m['queue'][m['queue_head']]
         kind = task['kind']
+        if kind in ('complex', 'complex_feedback') and complex_processed >= COMPLEX_WORK_PER_RUN:
+            # Keep the task pending, including its deduplication key. A
+            # deferred task has not been selected or completed.
+            m['queue'].append(dict(task))
+            m['queue_head'] += 1
+            processed += 1
+            continue
         tangent_selected(m, task)
         if kind == 'emerge':
             # The emergence event has already been handled this run.
@@ -1013,13 +1083,10 @@ def run():
                 completed = work_nexus(m, task, stats)
                 nexus_processed += 1
         elif kind == 'position': completed = work_position(m, task, stats)
-        elif kind == 'complex':
-            if complex_processed >= COMPLEX_WORK_PER_RUN:
-                completed = True
-                m['queue'].append(dict(task))
-            else:
-                completed = work_complex(m, task, stats)
-                complex_processed += 1
+        elif kind in ('complex', 'complex_feedback'):
+            worker = work_complex_feedback if kind == 'complex_feedback' else work_complex
+            completed = worker(m, task, stats)
+            complex_processed += 1
         elif kind == 'frontier': completed = work_frontier(m, task, stats)
         elif kind == 'pair': completed = work_pair(m, task, stats)
         elif kind == 'consume_op': completed = work_consume_op(m, task, stats)
@@ -1071,3 +1138,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+
