@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.6.1
+Current development version: V4.6.2
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,9 +19,9 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.6.1
+## Running V4.6.2
 
-The runnable file is [zero_theoremV4.6.1.py](zero_theoremV4.6.1.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
+The runnable file is [zero_theoremV4.6.2.py](zero_theoremV4.6.2.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -29,23 +29,44 @@ python3 -m pip install -r requirements.txt
 
 On Android, open Pydroid3's Pip screen and install `sympy`. Then open and run the script. After installation, exploration works offline with no API key or subscription. The extension was tested with SymPy 1.14.0.
 
-V4.6.1 is a separate script; the earlier script is retained as a code backup.
+V4.6.2 is a separate script; the earlier script is retained as a code backup.
 
 Download the file into a writable folder. From that folder, run:
 
 ```bash
-python3 zero_theoremV4.6.1.py
+python3 zero_theoremV4.6.2.py
 ```
 
-If your Python 3 command is `python`, use `python zero_theoremV4.6.1.py`. On Android, open the saved file in Pydroid3 and run it.
+If your Python 3 command is `python`, use `python zero_theoremV4.6.2.py`. On Android, open the saved file in Pydroid3 and run it.
 
 Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.1. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.2. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
+
+### V4.6.2 zero archive access, lineage and feedback
+
+This patch has been edited and read, but has **not been executed or regression-tested**. The instruction to defer test runs remains in effect.
+
+The rational zero-nexus scheduler no longer checks only the first 30 expressions or searches expression text for the character `0`. It inspects numerical leaves in construction trees. A leaf with value 10 is therefore not confused with a zero operand.
+
+Two saved cursor tasks connect the existing zero-slot mechanism across time:
+
+- `zero_scan`: a new registered foundation value scans the archive present at its registration, one expression per task.
+- `zero_source`: a new zero-bearing expression receives previously registered nonzero foundation values, one value per task.
+
+Previously archived expressions and foundation values are also scheduled when this runtime extension is first enabled. These are bounded scheduling passes, not a claim of exhaustive mathematical coverage. Scans share `NEXUS_WORK_PER_RUN` with the original nexus transformation worker, and queued work can take many runs to complete.
+
+The underlying transformation remains `zero_nexus_transform_v1`: replace one numerical zero leaf with a selected registered integer and evaluate the resulting expression using ordinary arithmetic. Fractional and algebraic selections remain supported by the symbolic zero-nexus branch introduced in V4.6.1.
+
+New rational nexus results now notify the result-feedback frontier as well as the existing revisit mechanism. The leaf list is calculated from the transformed tree. A one-time metadata augmentation recalculates incorrect leaf lists in older rational nexus records, retaining their IDs, expression trees and ancestry; repairs are recorded as current augmentation events.
+
+Deferred nexus tasks remain pending and keep their deduplication keys. They are not logged as completed transformations when their per-run budget is exhausted.
+
+This patch adds persisted task kinds. After it saves memory, continue with V4.6.2 for that memory. The earlier scripts remain code backups.
 
 ### V4.6.1 zero-nexus connection
 
