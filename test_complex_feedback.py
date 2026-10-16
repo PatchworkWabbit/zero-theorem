@@ -9,7 +9,7 @@ import unittest
 from fractions import Fraction
 
 
-SOURCE = Path(__file__).with_name('zero_theoremV4.5.1.py')
+SOURCE = Path(__file__).with_name('zero_theoremV4.6.py')
 spec = importlib.util.spec_from_file_location('zero_theorem', SOURCE)
 engine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine)
