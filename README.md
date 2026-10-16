@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.6
+Current development version: V4.6.1
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,9 +19,9 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.6
+## Running V4.6.1
 
-The runnable file is [zero_theoremV4.6.py](zero_theoremV4.6.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
+The runnable file is [zero_theoremV4.6.1.py](zero_theoremV4.6.1.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -29,23 +29,41 @@ python3 -m pip install -r requirements.txt
 
 On Android, open Pydroid3's Pip screen and install `sympy`. Then open and run the script. After installation, exploration works offline with no API key or subscription. The extension was tested with SymPy 1.14.0.
 
-V4.6 is a separate script; the earlier script is retained as a code backup.
+V4.6.1 is a separate script; the earlier script is retained as a code backup.
 
 Download the file into a writable folder. From that folder, run:
 
 ```bash
-python3 zero_theoremV4.6.py
+python3 zero_theoremV4.6.1.py
 ```
 
-If your Python 3 command is `python`, use `python zero_theoremV4.6.py`. On Android, open the saved file in Pydroid3 and run it.
+If your Python 3 command is `python`, use `python zero_theoremV4.6.1.py`. On Android, open the saved file in Pydroid3 and run it.
 
 Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.1. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
+
+### V4.6.1 zero-nexus connection
+
+This patch connects the exact powers/root branch to zero-slot constructions. It has been edited and read, but has **not been executed or regression-tested**, following the current development instruction to defer tests until the agreed basic-operation connections are complete.
+
+The extension retains a construction tree separately from each simplified symbolic value. A construction that evaluates to zero still retains its original zero leaves, operators and operand order. Existing V4.6 records receive these trees using their stored parents and source references.
+
+The zero-nexus worker can replace one numerical zero leaf in a construction with an available symbolic construction. It evaluates the resulting expression using the same standard arithmetic, power and principal-root definitions. For example, the mechanism permits constructing `sqrt(2)` from a `sqrt(0)` construction by selecting `2` for its zero slot. This is a recorded expression substitution, not the numerical assertion `0 = 2`.
+
+Positional zero slots from `00404` retain their existing arithmetic pathways and gain `0**n`, `n**0`, and unary `sqrt(0)` constructions. Positional digit selections use registered states 0 through 9, matching the earlier positional scope. General symbolic zero-slot feedback can select other available exact values, including fractions and complex/algebraic values within the existing limits.
+
+New symbolic nexus tasks retain pair, direction and slot cursors between runs. They share the existing symbolic task budget. Successful constructions enter the same symbolic feedback and numeric archive bridges as other symbolic results. A construction already recorded under the same nexus pathway is not repeatedly archived solely because a different chain of parent IDs rediscovered it; duplicate attempts are journaled within the existing journal cap.
+
+Zero-nexus provenance is attached to each new nexus record: the persistent `Z0` reference, the source construction and selected value IDs or original positional slot, and the selected zero path. Symbolic value queries display this metadata when present.
+
+The foundation's state-count rule and ordinary meanings of the mathematical operations are retained. Domain restrictions and resource limits still apply. The actual behaviour of this unexecuted patch remains to be validated later.
+
+After V4.6.1 saves its new task kinds, continue with V4.6.1 for that memory; previous scripts do not recognize those task kinds.
 
 ### V4.6 exact powers, roots and symbolic feedback
 
@@ -84,7 +102,7 @@ V4.5.2 connected generated complex expressions to subsequent complex calculation
 python3 -m unittest discover -p 'test_*.py' -v
 ```
 
-The checks cover exact algebraic calculations, generated-result feedback, both numeric archive bridges, older-memory augmentation, serialization, continuation, domain/resource limits and restricted read-only queries.
+The existing checks target the V4.6 baseline and cover exact algebraic calculations, generated-result feedback, both numeric archive bridges, older-memory augmentation, serialization, continuation, domain/resource limits and restricted read-only queries. They have not been changed or run for V4.6.1. The zero-nexus patch is awaiting the later validation phase.
 
 ### Archive queries
 
