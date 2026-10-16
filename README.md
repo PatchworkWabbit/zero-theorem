@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.6.4
+Current development version: V4.6.5
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,9 +19,9 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## Running V4.6.4
+## Running V4.6.5
 
-The runnable file is [zero_theoremV4.6.4.py](zero_theoremV4.6.4.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
+The runnable file is [zero_theoremV4.6.5.py](zero_theoremV4.6.5.py). It uses Python 3 and SymPy for exact algebraic calculations. Install the dependency once:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -29,23 +29,29 @@ python3 -m pip install -r requirements.txt
 
 On Android, open Pydroid3's Pip screen and install `sympy`. Then open and run the script. After installation, exploration works offline with no API key or subscription. The extension was tested with SymPy 1.14.0.
 
-V4.6.4 is a separate script; the earlier script is retained as a code backup.
+V4.6.5 is a separate script; the earlier script is retained as a code backup.
 
 Download the file into a writable folder. From that folder, run:
 
 ```bash
-python3 zero_theoremV4.6.4.py
+python3 zero_theoremV4.6.5.py
 ```
 
-If your Python 3 command is `python`, use `python zero_theoremV4.6.4.py`. On Android, open the saved file in Pydroid3 and run it.
+If your Python 3 command is `python`, use `python zero_theoremV4.6.5.py`. On Android, open the saved file in Pydroid3 and run it.
 
 Each execution performs a bounded exploration batch, saves memory, and then opens an archive query prompt. Press Enter on an empty line to exit. Run the same file again to continue the saved exploration.
 
 Memory is stored beside the script as `zero_theorem_rabbitholes_v41_memory.json`, regardless of the terminal's working directory. A fresh run starts with foundation `[0]` and registers three further states, reaching `[0, 1, 2, 3]` before saving. The foundation printed at startup is the state before that run's new emergence events.
 
-The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.4. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
+The script's internal `VERSION = '4.1'` and the `v41` memory filename are retained for memory compatibility; the runtime banner identifies V4.6.5. Do not rename the memory file or change the version value just to match the script filename. Loading requires memory schema `1` and version `4.1`; this check alone does not guarantee compatibility with every historical file.
 
 For a separate fresh experiment, put a copy of the script in another writable folder without an existing memory file. Back up existing memory before experimenting with it.
+
+### V4.6.5 legacy positional observation audit
+
+Older V4.2 memories include explicitly labelled positional observations with `result_id: null`: those events did not create archived expressions. The audit now identifies and counts that historical format separately, checks its position/source/transformed-text metadata and zero reference, and continues rejecting invalid expression references. No memory migration, guessed result links, or arithmetic-rule changes are required.
+
+Validation: 30 regression tests pass. An uploaded run-14 memory with 3,961 expression records produced 108 false alarms under V4.6.4; V4.6.5 reports 108 legacy observations and zero structural issues on the same unchanged memory. A continuation of a temporary copy reached run 15 and passed the audit, preserving every pre-existing expression record and nexus event exactly. The user's memory is not included in this repository.
 
 ### V4.6.4 construction-complete imports, unified queries and whole-engine tracking
 
@@ -96,7 +102,7 @@ New parent-ledger rows use archive-qualified labels such as `rational:17`, `comp
 The new read-only structural command is:
 
 ```bash
-python3 zero_theoremV4.6.4.py --integrity
+python3 zero_theoremV4.6.5.py --integrity
 ```
 
 It loads existing saved memory without launching exploration, upgrading memory, saving changes or evaluating mathematical expressions. This command alone uses the standard library; normal exploration still requires SymPy. With no saved memory, it reports that there is no archive to inspect. `integrity` is also available at the interactive query prompt, after a normal exploration run.
@@ -183,7 +189,7 @@ V4.5.2 connected generated complex expressions to subsequent complex calculation
 python3 -m unittest discover -p 'test_*.py' -v
 ```
 
-The 25 current checks target V4.6.4. They cover exact arithmetic, feedback, archive bridges, distinct equal-valued constructions, complex operand order, unified queries, cross-domain counters, older-memory upgrades, serialization, forced budget pauses, import-loop prevention, deferred imports and structural audits. Details are in [VALIDATION_V4.6.4.md](VALIDATION_V4.6.4.md).
+The 30 current checks target V4.6.5. They cover exact arithmetic, feedback, archive bridges, distinct equal-valued constructions, complex operand order, unified queries, cross-domain counters, older-memory upgrades, serialization, forced budget pauses, import-loop prevention, deferred imports and structural audits. Details are in [VALIDATION_V4.6.4.md](VALIDATION_V4.6.4.md).
 
 ### Archive queries
 
