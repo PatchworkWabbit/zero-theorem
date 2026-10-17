@@ -8,9 +8,10 @@ and reserves missing IDs with explicit unresolved slots. A slot's value is
 
 ## Install on a phone
 
-The repository currently contains engines through V4.6.5. This installer targets
-the complete V4.7.1 engine used in the recent phone test; it does not downgrade
-that engine or replace any of its workers.
+The repository includes the original V4.7.1 and a standalone patched V4.7.2.
+For normal phone use, download `zero_theoremV4.7.2.py` and run it in your test
+folder. It includes the recovery implementation; no installer is necessary.
+The installer below is retained for reproducing the build from V4.7.1.
 
 1. Put `apply_zero_recovery_patch.py`, `zero_recovery.py`, and your
    `zero_theoremV4.7.1.py` together in the test folder.
@@ -82,6 +83,12 @@ uses the repository's real V4.6.5 arithmetic workers with the V4.7.1 zero-gate
 contract, plus a two-run continuation smoke test. It does not substitute dummy
 role/calculus workers for a claimed full V4.7.1 regression.
 
-**Draft release:** the complete V4.7.1 source is not yet checked into this
-repository. Full V4.7.1 first-run, continued-run, role/calculus and record-19
-integration checks remain required before merging/releasing this installer.
+**Actual-engine verification:** `test_zero_recovery_actual.py` executes the
+original V4.7.1 to reproduce the 132/66/24/10/13 first-run archive counts, runs
+the standalone V4.7.2 from fresh memory, deletes rational record 19 from legacy
+memory, and verifies exact record restoration, continued execution, full
+zero-core passage coverage and zero archive-link issues. A second deletion
+after manifest creation is recovered through a third run. These runs execute
+the actual roles and calculus workers. Runtime is desktop Python with SymPy
+1.14.0; Pydroid3 device performance remains unmeasured. The PR remains draft
+until review; recovery remains limited to the documented rule set.
