@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.6.5
+Current development version: V4.7.5 (experimental recovery)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -18,6 +18,47 @@ Rather than requiring a predetermined mathematical destination, the engine explo
 The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
+
+## V4.7.5 recovery experiment
+
+The latest standalone script is [zero_theoremV4.7.5.py](zero_theoremV4.7.5.py).
+It adds whole-body symbol mapping, persistent recovery slots with complete
+neighbouring expressions, evidence-based reconstruction, and continuous recovery
+with checkpoints. Earlier numbered scripts remain available below.
+
+On one damaged test memory, this version produced a candidate with expression
+IDs **20, 22, 23, 116, and 117** reconstructed from surviving evidence. The
+candidate passed arithmetic/reference/coverage checks and a normal
+exploration/save/reload continuation. The user also reported a successful
+candidate on Android. An exact comparison with the intact master remains
+outstanding. This is an experimental recovery result, not a guarantee of
+arbitrary data or Python source-code repair.
+
+Install SymPy as described below. For a fresh experiment, run the script in its
+own writable folder. For recovery, place a **test copy** of the damaged memory
+beside it under `zero_theorem_rabbitholes_v41_memory.json`, then run the script.
+Recovery continues internally instead of requiring a restart every work batch.
+Candidate files are written separately; the damaged source is preserved.
+
+```bash
+python3 zero_theoremV4.7.5.py
+# Or inspect/recover an explicit test file:
+python3 zero_theoremV4.7.5.py --repair-json /path/to/test-memory.json
+# Optional user-requested pause:
+python3 zero_theoremV4.7.5.py --repair-json /path/to/test-memory.json --seconds 60
+# Reproducible tests (no user memory needed):
+python3 -m unittest -v test_zero_body_recovery
+```
+
+Stop/interrupt pauses recovery and saves its continuation. A forced process kill
+may lose work since the last checkpoint. Keep sidecar files beside their source
+to resume. Once a candidate is ready, inspect and run that candidate in a
+separate test folder. A normal healthy-memory run retains its exploration limits.
+
+See [VALIDATION_V4.7.5.md](VALIDATION_V4.7.5.md) for exact scope, evidence, and
+remaining limitations.
+
+## Previous V4.6.5 release
 
 ## Running V4.6.5
 
@@ -340,4 +381,5 @@ Licence: GNU General Public License v3.0 (GPLv3); see [LICENSE](LICENSE).
 Zero Theorem — Emergent Information Engine
 
 Original concept developed in 2012. Computational implementation and ongoing research developed subsequently.
+
 
