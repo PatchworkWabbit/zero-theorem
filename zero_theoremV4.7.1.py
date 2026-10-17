@@ -1,0 +1,3192 @@
+# ============================================================
+# ZERO THEOREM V4.7.1 - ZERO SLOTS / ROLE PATHS / CALCULUS
+# A runnable continuation of V2.2's interconnected architecture
+# ============================================================
+# Python 3 + SymPy. Keeps V2.2/V3.x files untouched.
+# Work is bounded PER RUN, with a persistent queue for continuation.
+# This is a computational exploration model, not a mathematical proof.
+
+import json
+import os
+import time
+from collections import deque
+from fractions import Fraction
+
+VERSION = '4.1'  # Memory-format compatibility; runtime version is V4.7.1.
+MEMORY_FILENAME = 'zero_theorem_rabbitholes_v41_memory.json'
+WORK_PER_RUN = 90
+COMPLEX_WORK_PER_RUN = 24
+MAX_JOURNAL_EVENTS_PER_RUN = 2400
+EMERGENCE_EVENTS_PER_RUN = 3
+NEXUS_WORK_PER_RUN = 36
+MAX_NEW_EXPRESSIONS_PER_RUN = 400
+MAX_DEPTH = 4
+MAX_BITS = 256
+MAX_OBSERVER_PROPOSALS_PER_RUN = 160
+OPERATIONS = ('+', '-', '*', '/')
+REFERENCE_INPUT = '00404'
+SYMBOLIC_WORK_PER_RUN = 24
+SYMBOLIC_IMPORT_PER_RUN = 24  # per source archive; cursors persist
+SYMBOLIC_MAX_NODES = 48
+SYMBOLIC_MAX_POWER = 8
+SYMBOLIC_MAX_ROOT_BITS = 32
+SYMBOLIC_BINARY_OPERATIONS = ('*', '**', '+', '-', '/')
+
+
+
+# CORE DESIGN, clarified 2026-10-16:
+#   Reduce to our basics. Everything belongs under the 0 design.
+#   Known results and new discoveries pass through the core 0 function.
+# This implementation centralizes operation dispatch and archive passage.
+# Passage does not imply multiplication by 0, a reset, or an automatic fix.
+# Existing explicit nexus transformations retain their mathematical rules.
+# Role transformations execute explicit representation rules through zero.
+# They use registered counters as slots, and preserve every generated path.
+# Naming/abstraction are supplied model rules, not consequences of arithmetic alone.
+# Numerical cycles and different constructions must remain distinguishable.
+# This release does not establish physical decay or exhaustive exploration.
+
+ZERO_CORE_RULE = 'everything_through_zero_v1'
+ZERO_CORE_DOMAINS = ('rational', 'complex', 'symbolic', 'calculus', 'roles')
+
+
+def zero_core_state(m):
+    state = m.setdefault('zero_core', {
+        'schema': 1, 'rule': ZERO_CORE_RULE, 'zero_nexus': 'Z0',
+        'record_passages': {}, 'historical_record_passages': {},
+        'operation_passages': {},
+        'boundary': {'previous_runs': len(m.get('runs', [])),
+                     'historical_operations_reconstructed': False}})
+    for field in ('record_passages', 'historical_record_passages'):
+        for domain in ZERO_CORE_DOMAINS:
+            state[field].setdefault(domain, 0)
+    return state
+
+
+def zero_core(m, domain, *, record=None, historical=False,
+              operation=None, operands=()):
+    """Shared entry for exact operations and every accepted archive record.
+
+    Identity passage preserves values, constructions, and ancestry. Actual
+    transformations use the existing explicit workers; none is invented here.
+    Historical records pass NOW, without claiming past operations used this gate.
+    """
+    if record is not None:
+        if domain not in ZERO_CORE_DOMAINS or operation is not None:
+            raise ValueError('Invalid zero-core record passage')
+        state = zero_core_state(m)
+        marker = record.get('zero_core_passage')
+        if marker is not None:
+            expected = (ZERO_CORE_RULE, domain, record['id'])
+            if (marker.get('rule'), marker.get('archive'), marker.get('id')) != expected:
+                raise ValueError('Mismatched zero-core record passage')
+            return record
+        record['zero_core_passage'] = {
+            'rule': ZERO_CORE_RULE, 'archive': domain, 'id': record['id'],
+            'zero_nexus': 'Z0', 'historical_backfill': bool(historical),
+            'effect': 'identity_preserves_construction'}
+        state['record_passages'][domain] += 1
+        if historical:
+            state['historical_record_passages'][domain] += 1
+        return record
+    if domain == 'rational':
+        a, b = operands
+        result = _operate_rational_exact(a, operation, b)
+    elif domain == 'complex':
+        a, b = operands
+        result = _complex_operate_exact(a, b, operation)
+    elif domain == 'symbolic':
+        a, b = operands
+        result = _symbolic_apply_exact(a, operation, b)
+    elif domain == 'roles' and operation == 'transform':
+        source_id, target = operands
+        if m is None:
+            raise ValueError('Role transformations require saved construction context')
+        result = _role_transition_exact(m, source_id, target)
+    elif domain == 'calculus':
+        if m is None:
+            (coefficients,) = operands  # Pure arithmetic checks have no archive.
+        else:
+            coefficients, variable_id = operands
+            role_variable(m, variable_id)  # Reject missing or incompatible bindings.
+        result = _calculus_apply_exact(operation, coefficients)
+    elif domain == 'foundation' and operation == 'registered_state_count':
+        (states,) = operands
+        result = len(states)
+    else:
+        raise ValueError('Unsupported zero-core operation domain')
+    if m is not None:
+        state = zero_core_state(m)
+        counts = state['operation_passages'].setdefault(domain, {})
+        counts[operation] = counts.get(operation, 0) + 1
+    return result
+
+
+def upgrade_zero_core(m):
+    """Backfill passage metadata only; retain IDs, values and saved work."""
+    zero_core_state(m)
+    m['rule_registry'].setdefault(ZERO_CORE_RULE, {
+        'status': 'active_design_rule',
+        'scope': 'exact_operation_dispatch_and_accepted_archive_records',
+        'passage': 'identity_unless_an_explicit_transformation_rule_is_applied'})
+    for domain in ZERO_CORE_DOMAINS:
+        records = (m.get('expressions', []) if domain == 'rational' else
+                   m.get(domain + '_archive', {}).get('expressions', []))
+        for rec in records:
+            zero_core(m, domain, record=rec, historical=True)
+
+
+def zero_core_report(m):
+    """Read-only coverage check; numerical cycles are not provenance cycles."""
+    report = {'rule': ZERO_CORE_RULE, 'archives': {}, 'complete': True}
+    state = m.get('zero_core', {})
+    for domain in ZERO_CORE_DOMAINS:
+        records = (m.get('expressions', []) if domain == 'rational' else
+                   m.get(domain + '_archive', {}).get('expressions', []))
+        missing = []
+        for rec in records:
+            marker = rec.get('zero_core_passage', {})
+            if (marker.get('rule') != ZERO_CORE_RULE or
+                    marker.get('archive') != domain or
+                    marker.get('id') != rec['id'] or
+                    marker.get('zero_nexus') != 'Z0'):
+                missing.append(rec['id'])
+        counted = state.get('record_passages', {}).get(domain, 0)
+        report['archives'][domain] = {
+            'records': len(records), 'missing': missing,
+            'counted_passages': counted}
+        if missing or counted != len(records):
+            report['complete'] = False
+    return report
+
+
+def number(value):
+    if isinstance(value, Fraction):
+        return value
+    return Fraction(str(value))
+
+
+def encode(value):
+    value = number(value)
+    return str(value.numerator) if value.denominator == 1 else str(value.numerator) + '/' + str(value.denominator)
+
+
+def _operate_rational_exact(a, op, b):
+    if op == '+': return a + b
+    if op == '-': return a - b
+    if op == '*': return a * b
+    if op == '/':
+        if b == 0: return None
+        return a / b
+    raise ValueError('Unsupported operation')
+
+
+def operate(a, op, b, tracking=None, context='arithmetic'):
+    result = zero_core(tracking, 'rational', operation=op, operands=(a, b))
+    record_kernel_operation(tracking, 'rational', op,
+                            'blocked' if result is None else 'succeeded', context,
+                            'division_by_zero' if result is None else None)
+    return result
+
+
+def digit_breakdown(text):
+    if not text or not text.isdigit():
+        raise ValueError('Expected digit string')
+    return ''.join('0' if c == '0' else '1' * int(c) for c in text)
+
+
+def positional_slots(text):
+    if not text or not text.isdigit():
+        raise ValueError('Expected digit string')
+    slots = []
+    for position, digit in enumerate(text, 1):
+        if digit == '0':
+            slots.append({'source_position': position, 'source_digit': digit,
+                          'kind': 'persistent_zero', 'unit': None})
+        else:
+            for unit in range(1, int(digit) + 1):
+                slots.append({'source_position': position, 'source_digit': digit,
+                              'kind': 'unit_slot', 'unit': unit})
+    return slots
+
+
+def foundation():
+    # The recognition of zero is registered without consuming the zero nexus.
+    states = [0]
+    zeros = [{'id': 'Z0', 'generation': 0, 'purpose': 'persistent_nexus'}]
+    events = []
+    for generation in range(1, 5):
+        next_state = len(states)
+        events.append({'event': 'RH-%03d' % generation,
+                       'from': states[-1], 'to': next_state,
+                       'rule': 'registered_state_count',
+                       'zero_used': zeros[-1]['id']})
+        states.append(next_state)
+        zeros.append({'id': 'Z%d' % generation, 'generation': generation,
+                      'purpose': 'fresh_zero_operation_record'})
+    return {'states': states, 'trinity': [0, 1, 2],
+            'zero_records': zeros, 'transitions': events,
+            'rule': 'foundation_state_count_v3'}
+
+
+def empty_memory():
+    f = foundation()
+    m = {'schema': 1, 'version': VERSION, 'runs': [], 'foundation': f,
+         'expressions': [], 'queue': [], 'queue_head': 0,
+         'known_expression_keys': [], 'results': {},
+         'network': {'state_observations': 0, 'unique_states': {},
+                     'operation_counts': {o: 0 for o in OPERATIONS},
+                     'transitions': {}, 'tangents': {},
+                     'zero_occurrences': 0, 'shared_counter_accesses': 0},
+         'observer': {'proposals': [], 'variable_store': {},
+                      'role_counts': {'value': 0, 'variable': 0,
+                                      'operation': 0, 'combined': 0}},
+         'blocked': [], 'zero_proposals': [], 'rule_registry': {
+             'foundation_state_count_v3': {'status': 'established'},
+             'consume_v1': {'status': 'active_exploration'},
+             'reuse_v1': {'status': 'active_exploration'},
+             'revisit_v1': {'status': 'active_exploration'},
+             'zero_slot_proposal_v1': {'status': 'experimental_unapproved'},
+             'observer_operation_selection_v22': {'status': 'candidate_only'}},
+         'reference': {'input': REFERENCE_INPUT,
+                       'breakdown': digit_breakdown(REFERENCE_INPUT),
+                       'slots': positional_slots(REFERENCE_INPUT)}}
+    # Start from zero alone; register later states as events.
+    f['states'] = [0]
+    f['zero_records'] = [f['zero_records'][0]]
+    f['transitions'] = []
+    m['emergence_events'] = []
+    m['nexus_events'] = []
+    m['nexus_pending'] = []
+    for n in f['states']:
+        add_expression(m, {'expr': str(n), 'value': str(n), 'tree': {'leaf': n},
+                           'depth': 0, 'parents': [], 'leaves': [n],
+                           'pathway': 'foundation_state_count_v3',
+                           'ancestry': [], 'domain': 'rational'})
+    # The first emergence and exploration opportunities are scheduled by
+    # the registration mechanism, not hard-coded as five starting states.
+    enqueue(m, {'kind': 'emerge'})
+    return m
+
+
+def add_expression(m, record):
+    # A key includes the rule and construction tree. Numerical equality alone
+    # must NEVER merge distinct expression trees.
+    key = json.dumps([record['pathway'], record['tree']], sort_keys=True,
+                     separators=(',', ':'))
+    if key in m['_keys'] if '_keys' in m else key in m['known_expression_keys']:
+        if 'genesis' in m:
+            m['tangent_ledger']['duplicate_expressions'] = m['tangent_ledger'].get('duplicate_expressions', 0) + 1
+            journal(m, 'duplicate_expression', value=record['value'], pathway=record['pathway'])
+        return None
+    if '_keys' in m: m['_keys'].add(key)
+    m['known_expression_keys'].append(key)
+    idx = len(m['expressions'])
+    record['id'] = idx
+    zero_core(m, 'rational', record=record)
+    m['expressions'].append(record)
+    m['results'].setdefault(record['value'], []).append(idx)
+    if 'genesis' in m:
+        journal(m, 'expression_created', expression_id=idx, value=record['value'], pathway=record['pathway'], parents=record.get('parents', []), first_value=(len(m['results'][record['value']]) == 1))
+    if 'v45_observations' in m:
+        observe_v45_real(m, record)
+    if 'zero_runtime' in m:
+        schedule_zero_sources(m)
+    if 'archive_integration' in m:
+        sync_archive_records(m, 'rational')
+    return idx
+
+
+def task_key(task):
+    return json.dumps(task, sort_keys=True, separators=(',', ':'))
+
+
+def rebalance_queue(m):
+    """Deduplicate pending tasks only, retaining their first occurrence.
+    Previously completed work is never deleted from the archive.
+    """
+    pending = m['queue'][m['queue_head']:]
+    kinds = ('symbolic_root', 'symbolic_pair', 'symbolic_nexus', 'symbolic_position', 'frontier', 'pair', 'nexus', 'zero_scan', 'zero_source', 'position', 'complex', 'complex_feedback', 'consume_op',
+             'revisit', 'consume', 'emerge')
+    buckets = {kind: deque() for kind in kinds}
+    keys = set()
+    removed = 0
+    for task in pending:
+        key = task_key(task)
+        if key in keys:
+            removed += 1
+            continue
+        keys.add(key)
+        buckets[task['kind']].append(task)
+    balanced = []
+    while any(buckets.values()):
+        for kind in kinds:
+            if buckets[kind]:
+                balanced.append(buckets[kind].popleft())
+    m['queue'], m['queue_head'] = balanced, 0
+    m['_pending_keys'] = keys
+    return removed
+
+
+def enqueue(m, task):
+    key = task_key(task)
+    keys = m.get('_pending_keys')
+    if keys is not None:
+        if key in keys:
+            if 'tangent_ledger' in m:
+                m['tangent_ledger']['duplicate_pending'] = m['tangent_ledger'].get('duplicate_pending', 0) + 1
+                journal(m, 'duplicate_pending_tangent', task_key=key, kind=task['kind'])
+            return False
+        keys.add(key)
+    m['queue'].append(task)
+    if 'tangent_ledger' in m: tangent_generated(m, task)
+    return True
+
+
+def record_counters(m, left, right, op, result, pathway):
+    net = m['network']
+    before = json.dumps([left['value'], right['value']], separators=(',', ':'))
+    after = result['value']
+    tangent = json.dumps([before, op, after, pathway], separators=(',', ':'))
+    net['state_observations'] += 1
+    net['unique_states'][after] = net['unique_states'].get(after, 0) + 1
+    net['operation_counts'][op] += 1
+    net['transitions'][tangent] = net['transitions'].get(tangent, 0) + 1
+    net['tangents'][tangent] = net['tangents'].get(tangent, 0) + 1
+    net['zero_occurrences'] += int(number(left['value']) == 0) + int(number(right['value']) == 0)
+    net['shared_counter_accesses'] += 1
+
+
+def observe(m, rec, run_stats):
+    if run_stats['observer_added'] >= MAX_OBSERVER_PROPOSALS_PER_RUN:
+        return
+    obs = m['observer']
+    value = number(rec['value'])
+    name = 'A_%d' % rec['id']
+    selected = OPERATIONS[abs(value.numerator) % 4]
+    proposal = {'source_id': rec['id'], 'source_expression': rec['expr'],
+                'value': rec['value'], 'variable': name,
+                'selected_operation': selected,
+                'selection_rule': 'abs(numerator) modulo 4 (V2.2-inspired)',
+                'roles': ['value', 'variable', 'operation', 'combined'],
+                'status': 'evaluated_candidate_not_foundation_rule'}
+    obs['proposals'].append(proposal)
+    obs['variable_store'][name] = rec['value']
+    for role in obs['role_counts']:
+        obs['role_counts'][role] += 1
+    run_stats['observer_added'] += 1
+    if 'genesis' in m: journal(m, 'observer_proposal', source_id=rec['id'], selected_operation=selected, status=proposal['status'])
+
+
+def zero_assist(m, left, right, op, pathway):
+    # A blocked division is a concrete dead end for this operation.
+    # Zero remains in the nexus; suggestions do NOT change theorem rules.
+    blocked_key = (left['id'], right['id'], op, pathway)
+    seen = m.setdefault('_blocked_keys', set())
+    if blocked_key in seen: return
+    seen.add(blocked_key)
+    blocked_id = len(m['blocked'])
+    m['blocked'].append({'id': blocked_id, 'left': left['id'],
+                         'right': right['id'], 'operation': op,
+                         'reason': 'division_by_zero', 'pathway': pathway,
+                         'status': 'blocked'})
+    if 'genesis' in m: journal(m, 'blocked_operation', blocked_id=blocked_id, left=left['id'], right=right['id'], operation=op, reason='division_by_zero')
+    for replacement in sorted(set(m['foundation']['states']) | set(int(k) for k in m['results'] if '/' not in k and k.lstrip('-').isdigit()))[:24]:
+        if replacement == 0: continue
+        candidate = operate(number(left['value']), '/', Fraction(replacement),
+                            tracking=m, context='zero_slot_proposal_v1')
+        m['zero_proposals'].append({
+            'blocked_id': blocked_id, 'zero_record': 'Z0',
+            'slot': 'denominator', 'replacement': replacement,
+            'expression': '(' + left['expr'] + ' / ' + str(replacement) + ')',
+            'result': encode(candidate), 'status': 'unapproved_observation',
+            'construction_rule': 'zero_slot_proposal_v1'})
+
+
+def combine(m, a_id, b_id, op, pathway, run_stats):
+    left, right = m['expressions'][a_id], m['expressions'][b_id]
+    a, b = number(left['value']), number(right['value'])
+    result = operate(a, op, b, tracking=m, context=pathway)
+    if result is None:
+        zero_assist(m, left, right, op, pathway)
+        return None
+    if result.numerator.bit_length() > MAX_BITS or result.denominator.bit_length() > MAX_BITS:
+        return None
+    depth = max(left['depth'], right['depth']) + 1
+    if depth > MAX_DEPTH: return None
+    tree = {'op': op, 'left': left['tree'], 'right': right['tree']}
+    expression = '(' + left['expr'] + ' ' + op + ' ' + right['expr'] + ')'
+    rec = {'expr': expression, 'value': encode(result), 'tree': tree,
+           'depth': depth, 'parents': [a_id, b_id],
+           'leaves': left['leaves'] + right['leaves'],
+           'pathway': pathway, 'domain': 'rational',
+           'ancestry': left['ancestry'] + right['ancestry'] + [
+               {'left_id': a_id, 'right_id': b_id, 'operation': op,
+                'result': encode(result), 'rule': pathway}]}
+    idx = add_expression(m, rec)
+    if idx is None: return None
+    record_counters(m, left, right, op, rec, pathway)
+    schedule_frontier(m, idx)
+    run_stats['new'] += 1
+    observe(m, m['expressions'][idx], run_stats)
+    # Revisit prior constructions using the newly discovered value. This is
+    # bounded, deterministic and continues through the persisted task queue.
+    if depth < MAX_DEPTH and len(m['queue']) - m['queue_head'] < 12000 and (result != 0 or depth == 1):
+        enqueue(m, {'kind': 'revisit', 'new': idx, 'cursor': 0,
+                    'rule': 'revisit_v1'})
+    return idx
+
+
+def work_arithmetic_pair(m, task, stats, a, b, rule):
+    # Preserve both operand orders, even for commutative operations.
+    steps = [(x, y, op) for x, y in ((a, b), (b, a)) for op in OPERATIONS]
+    cursor = task.get('op_cursor', 0)
+    while cursor < len(steps):
+        if stats['new'] >= MAX_NEW_EXPRESSIONS_PER_RUN:
+            task['op_cursor'] = cursor
+            return False
+        x, y, op = steps[cursor]
+        combine(m, x, y, op, rule, stats)
+        cursor += 1
+        task['op_cursor'] = cursor
+    return True
+
+
+def work_pair(m, task, stats):
+    return work_arithmetic_pair(m, task, stats, task['left'], task['right'], task['rule'])
+
+
+def work_consume(m, task, stats):
+    items = task['items']
+    if len(items) < 2 or task['depth'] >= MAX_DEPTH:
+        return True
+    # Schedule each construction separately so every task is atomic and
+    # can be resumed without losing work or redoing partial branches.
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            a, b = items[i], items[j]
+            remaining = [v for k, v in enumerate(items) if k not in (i, j)]
+            for x, y in ((a, b), (b, a)):
+                for op in OPERATIONS:
+                    enqueue(m, {'kind': 'consume_op', 'left': x, 'right': y,
+                                'op': op, 'remaining': remaining,
+                                'depth': task['depth'], 'path': task['path'],
+                                'rule': 'consume_v1'})
+    return True
+
+
+def work_consume_op(m, task, stats):
+    idx = combine(m, task['left'], task['right'], task['op'],
+                  'consume_v1', stats)
+    if idx is not None:
+        enqueue(m, {'kind': 'consume',
+                    'items': task['remaining'] + [idx],
+                    'depth': task['depth'] + 1,
+                    'path': task['path'] + [idx], 'rule': 'consume_v1'})
+    return True
+
+
+def work_revisit(m, task, stats):
+    new = task['new']
+    cursor = task['cursor']
+    # One prior expression per task keeps scheduling fair.
+    if cursor >= new: return True
+    prior = cursor
+    if not work_arithmetic_pair(m, task, stats, new, prior, 'revisit_v1'):
+        return False
+    if cursor + 1 < new:
+        enqueue(m, {'kind': 'revisit', 'new': new,
+                    'cursor': cursor + 1, 'rule': 'revisit_v1'})
+    return True
+
+
+# ============================================================
+# V4.1 - LIVE EMERGENCE + ZERO NEXUS TRANSFORMATIONS
+# ============================================================
+
+def register_next_state(m):
+    """Counting the registered states produces the next foundation state."""
+    f = m['foundation']
+    states = f['states']
+    next_value = zero_core(m, 'foundation', operation='registered_state_count',
+                           operands=(states,))
+    source = list(states)
+    zero_id = f['zero_records'][-1]['id']
+    event = {'id': 'E-%06d' % (len(m['emergence_events']) + 1),
+             'counted_states': source, 'result': next_value,
+             'zero_nexus': zero_id, 'rule': 'registered_state_count'}
+    states.append(next_value)
+    f['zero_records'].append({'id': 'Z%d' % next_value,
+                              'generation': next_value,
+                              'purpose': 'fresh_zero_operation_record'})
+    f['transitions'].append({'event': event['id'], 'from': source[-1],
+                              'to': next_value, 'rule': event['rule'],
+                              'zero_used': zero_id})
+    m['emergence_events'].append(event)
+    if 'genesis' in m: journal(m, 'foundation_emergence', state=next_value, zero_nexus=zero_id, counted_states=source)
+    idx = add_expression(m, {'expr': str(next_value),
+              'value': str(next_value), 'tree': {'leaf': next_value},
+              'depth': 0, 'parents': [], 'leaves': [next_value],
+              'pathway': 'foundation_state_count_v3',
+              'ancestry': [event], 'domain': 'rational'})
+    schedule_frontier(m, idx)
+    positional_nexus(m, next_value)
+    # Every registration opens new arithmetic opportunities immediately.
+    for prior in [m['results'][str(n)][0] for n in states]:
+        enqueue(m, {'kind': 'pair', 'left': prior, 'right': idx,
+                    'rule': 'reuse_v1'})
+    # Consume path uses the distinct registered operand occurrences.
+    if next_value <= 4:
+        foundation_ids = [m['results'][str(n)][-1] for n in states]
+        enqueue(m, {'kind': 'consume', 'items': foundation_ids,
+                    'depth': 0, 'path': [], 'rule': 'consume_v1'})
+    # Every new registered value can reach the whole existing archive.
+    schedule_zero_foundation_scan(m, idx)
+    enqueue(m, {'kind': 'emerge'})
+    return event
+
+
+def rational_tree_leaves(tree):
+    if 'leaf' in tree:
+        return [tree['leaf']]
+    return rational_tree_leaves(tree['left']) + rational_tree_leaves(tree['right'])
+
+
+def has_numeric_zero(tree):
+    if 'leaf' in tree:
+        return number(tree['leaf']) == 0
+    return has_numeric_zero(tree['left']) or has_numeric_zero(tree['right'])
+
+
+def foundation_expression_id(m, state):
+    return next((idx for idx in m['results'].get(str(state), [])
+                 if m['expressions'][idx]['pathway'] == 'foundation_state_count_v3'), None)
+
+
+def schedule_zero_foundation_scan(m, value_id):
+    runtime = m.get('zero_runtime')
+    if runtime is None or value_id in runtime['foundation_scheduled']:
+        return
+    runtime['foundation_scheduled'].append(value_id)
+    if number(m['expressions'][value_id]['value']) == 0:
+        return
+    enqueue(m, {'kind': 'zero_scan', 'value': value_id,
+                'cursor': 0, 'stop': len(m['expressions'])})
+
+
+def schedule_zero_sources(m):
+    """Notify each new zero-bearing expression of already registered values."""
+    runtime = m['zero_runtime']
+    cursor = runtime['source_cursor']
+    stop = len(m['foundation']['states'])
+    while cursor < len(m['expressions']):
+        rec = m['expressions'][cursor]
+        if stop > 1 and has_numeric_zero(rec['tree']):
+            enqueue(m, {'kind': 'zero_source', 'source': cursor,
+                        'cursor': 1, 'stop': stop})
+        cursor += 1
+        runtime['source_cursor'] = cursor
+
+
+def upgrade_zero_archive_access(m):
+    runtime = m.setdefault('zero_runtime', {
+        'version': 1, 'source_cursor': 0, 'foundation_scheduled': [],
+        'leaf_metadata_backfilled': False, 'leaf_metadata_repairs': 0})
+    if not runtime['leaf_metadata_backfilled']:
+        # Leaves are derived metadata. Keep expression IDs, trees and events.
+        for rec in m['expressions']:
+            if rec['pathway'] != 'zero_nexus_transform_v1':
+                continue
+            leaves = rational_tree_leaves(rec['tree'])
+            if rec['leaves'] != leaves:
+                rec['leaves'] = leaves
+                runtime['leaf_metadata_repairs'] += 1
+                journal(m, 'zero_leaf_metadata_repaired', expression_id=rec['id'])
+        runtime['leaf_metadata_backfilled'] = True
+    schedule_zero_sources(m)
+    for state in m['foundation']['states']:
+        idx = foundation_expression_id(m, state)
+        if idx is not None:
+            schedule_zero_foundation_scan(m, idx)
+    m['rule_registry'].setdefault('zero_archive_access_v462', {
+        'status': 'active_exploration_not_foundation',
+        'meaning': 'persistent_scans_for_existing_zero_slot_transformations'})
+
+
+def work_zero_scan(m, task, stats):
+    """Inspect one archived construction for a new registered value."""
+    cursor = task['cursor']
+    if cursor >= task['stop']:
+        return True
+    if has_numeric_zero(m['expressions'][cursor]['tree']):
+        enqueue(m, {'kind': 'nexus', 'source': cursor, 'value': task['value'],
+                    'rule': 'zero_nexus_transform_v1'})
+    if cursor + 1 < task['stop']:
+        enqueue(m, {**task, 'cursor': cursor + 1})
+    return True
+
+
+def work_zero_source(m, task, stats):
+    """Offer one prior registered value to a newly archived zero slot."""
+    cursor = task['cursor']
+    if cursor >= task['stop']:
+        return True
+    state = m['foundation']['states'][cursor]
+    value_id = foundation_expression_id(m, state)
+    if value_id is not None:
+        enqueue(m, {'kind': 'nexus', 'source': task['source'], 'value': value_id,
+                    'rule': 'zero_nexus_transform_v1'})
+    if cursor + 1 < task['stop']:
+        enqueue(m, {**task, 'cursor': cursor + 1})
+    return True
+
+
+def replace_one_zero(tree, replacement):
+    """Generate structurally distinct trees by replacing one zero leaf."""
+    if 'leaf' in tree:
+        return [{'leaf': replacement}] if number(tree['leaf']) == 0 else []
+    if 'op' not in tree:
+        return []
+    out = []
+    for left in replace_one_zero(tree['left'], replacement):
+        out.append({'op': tree['op'], 'left': left, 'right': tree['right']})
+    for right in replace_one_zero(tree['right'], replacement):
+        out.append({'op': tree['op'], 'left': tree['left'], 'right': right})
+    return out
+
+
+def evaluate_tree(tree, tracking=None):
+    if 'leaf' in tree:
+        return number(tree['leaf']), str(tree['leaf'])
+    a, ae = evaluate_tree(tree['left'], tracking)
+    b, be = evaluate_tree(tree['right'], tracking)
+    result = operate(a, tree['op'], b, tracking=tracking, context='zero_nexus_transform_v1')
+    if result is None:
+        raise ZeroDivisionError('Zero-assisted branch is blocked')
+    return result, '(' + ae + ' ' + tree['op'] + ' ' + be + ')'
+
+
+def work_nexus(m, task, stats):
+    """Zero is an operational reference; it does not assert 0 = value."""
+    source = m['expressions'][task['source']]
+    value_record = m['expressions'][task['value']]
+    replacement = number(value_record['value'])
+    if replacement.denominator != 1:
+        return True  # positional unit transformations use integer slots
+    replacement = int(replacement)
+    transformations = replace_one_zero(source['tree'], replacement)
+    for cursor in range(task.get('zero_cursor', 0), len(transformations)):
+        if stats['new'] >= MAX_NEW_EXPRESSIONS_PER_RUN:
+            task['zero_cursor'] = cursor
+            return False
+        transformed = transformations[cursor]
+        task['zero_cursor'] = cursor + 1
+        try:
+            result, expr = evaluate_tree(transformed, tracking=m)
+        except ZeroDivisionError:
+            continue
+        if max(result.numerator.bit_length(),
+               result.denominator.bit_length()) > MAX_BITS:
+            continue
+        event = {'zero_nexus': m['foundation']['zero_records'][0]['id'],
+                 'source_id': source['id'], 'registered_value_id': value_record['id'],
+                 'selected_value': replacement, 'slot_kind': 'numeric_zero_leaf',
+                 'reference_slots': len(m['reference']['slots']),
+                 'rule': 'zero_nexus_transform_v1'}
+        rec = {'expr': expr, 'value': encode(result), 'tree': transformed,
+               'depth': source['depth'], 'parents': [source['id'], value_record['id']],
+               'leaves': rational_tree_leaves(transformed), 'pathway': 'zero_nexus_transform_v1',
+               'ancestry': source['ancestry'] + [event], 'domain': 'rational'}
+        idx = add_expression(m, rec)
+        if idx is not None:
+            m['nexus_events'].append({'result_id': idx, **event})
+            if 'genesis' in m: journal(m, 'nexus_transformation', result_id=idx, source_id=source['id'], selected_value=replacement)
+            stats['new'] += 1
+            schedule_frontier(m, idx)
+            observe(m, m['expressions'][idx], stats)
+            if rec['depth'] < MAX_DEPTH:
+                enqueue(m, {'kind': 'revisit', 'new': idx, 'cursor': 0,
+                            'rule': 'revisit_v1'})
+    return True
+
+
+# ============================================================
+# V4.2 PATCH - RESULT FRONTIER / OPERATION AND POSITION SLOTS
+# ============================================================
+
+def schedule_frontier(m, idx):
+    """Each newly seen result can be combined with earlier distinct values."""
+    value = m['expressions'][idx]['value']
+    if m['results'][value][0] != idx:
+        return
+    m.setdefault('frontier_seen', []).append(idx)
+    prior = m['frontier_seen'][-32:-1]
+    # Include original foundation values even when outside recent window.
+    seed = [m['results'][str(n)][0] for n in m['foundation']['states']
+            if str(n) in m['results']]
+    for other in dict.fromkeys(seed + prior):
+        enqueue(m, {'kind': 'frontier', 'left': idx, 'right': other,
+                    'rule': 'result_feedback_v42'})
+
+
+def work_frontier(m, task, stats):
+    return work_arithmetic_pair(m, task, stats, task['left'], task['right'],
+                                'result_feedback_v42')
+
+
+def positional_nexus(m, state):
+    """Schedule genuine candidate expressions for original 00404 zero slots.
+    Positional ancestry is kept separately from numerical equality.
+    """
+    if not 0 <= state <= 9: return
+    for slot in m['reference']['slots']:
+        if slot['kind'] == 'persistent_zero':
+            for op in OPERATIONS:
+                enqueue(m, {'kind': 'position', 'source_position':
+                    slot['source_position'], 'selected_value': state,
+                    'op': op, 'rule': 'zero_nexus_position_operation_v43'})
+
+
+def work_position(m, task, stats):
+    value = task['selected_value']
+    op = task['op']
+    result = operate(Fraction(0), op, Fraction(value), tracking=m, context=task['rule'])
+    if result is None: return True
+    zero_id = m['results']['0'][0]
+    value_id = m['results'][str(value)][0]
+    # A distinct provenance-bearing pathway; do not equate the original
+    # positional string with an arithmetic expression.
+    tree = {'op': op, 'left': {'leaf': 0}, 'right': {'leaf': value}}
+    event = {'zero_nexus': 'Z0', 'source': REFERENCE_INPUT,
+             'source_position': task['source_position'],
+             'selected_value': value, 'operation': op,
+             'rule': task['rule']}
+    pathway = task['rule'] + '_slot_' + str(task['source_position'])
+    rec = {'expr': '(0 ' + op + ' ' + str(value) + ')',
+           'value': encode(result), 'tree': tree, 'depth': 1,
+           'parents': [zero_id, value_id], 'leaves': [0, value],
+           'pathway': pathway, 'ancestry': [event], 'domain': 'rational'}
+    idx = add_expression(m, rec)
+    if idx is not None:
+        stats['new'] += 1
+        m['nexus_events'].append({'result_id': idx, **event})
+        if 'genesis' in m: journal(m, 'positional_transformation', result_id=idx, source_position=task['source_position'], selected_value=value, operation=op)
+        record_counters(m, m['expressions'][zero_id],
+                        m['expressions'][value_id], op, rec, pathway)
+        schedule_frontier(m, idx)
+        observe(m, m['expressions'][idx], stats)
+    return True
+
+
+def upgrade_runtime(m):
+    """In-place compatible augmentation of existing V4.1 memory."""
+    m.setdefault('frontier_seen', [])
+    m.setdefault('nexus_events', [])
+    m.setdefault('emergence_events', [])
+    m['rule_registry'].setdefault('result_feedback_v42',
+                                  {'status': 'active_exploration'})
+    m['rule_registry'].setdefault('zero_nexus_position_operation_v42',
+                                  {'status': 'experimental_observation'})
+    # Backfill only unique values already archived; do not replay old work.
+    if not m.get('frontier_bootstrapped'):
+        for value, ids in list(m['results'].items()):
+            if ids:
+                schedule_frontier(m, ids[0])
+        m['frontier_bootstrapped'] = True
+
+
+def memory_path():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), MEMORY_FILENAME)
+
+
+def load_memory():
+    path = memory_path()
+    if not os.path.exists(path): return empty_memory()
+    with open(path, 'r', encoding='utf-8') as f: m = json.load(f)
+    if m.get('schema') != 1 or m.get('version') != VERSION:
+        raise ValueError('Incompatible memory; original file left untouched')
+    return m
+
+
+def save_memory(m):
+    # Runtime-only hash set is rebuilt from persistent keys, never serialized.
+    m.pop('_keys', None)
+    m.pop('_pending_keys', None)
+    m.pop('_blocked_keys', None)
+    m.pop('_journal_run_count', None)
+    m.pop('_v45_signatures', None)
+    m.pop('_symbolic_keys', None)
+    m.pop('_symbolic_values', None)
+    m.pop('_symbolic_ref_ids', None)
+    m.pop('_symbolic_nexus_keys', None)
+    m.pop('_complex_constructions', None)
+    m.pop('_canonical_keys', None)
+    path = memory_path()
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(m, f, ensure_ascii=False, separators=(',', ':'))
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
+def query(m, text):
+    if 'archive_integration' in m and query_unified(m, text):
+        return
+    try: key = encode(number(text))
+    except Exception:
+        print('Please enter a number such as 5, 1/2 or .8')
+        return
+    ids = m['results'].get(key, [])
+    proposals = [p for p in m['zero_proposals'] if p['result'] == key]
+    print('\nValue %s: %d archived expressions, %d unapproved zero proposals' %
+          (key, len(ids), len(proposals)))
+    for idx in ids[:20]:
+        rec = m['expressions'][idx]
+        print('  #%d %s [%s]' % (idx, rec['expr'], rec['pathway']))
+    if len(ids) > 20: print('  ... %d more' % (len(ids) - 20))
+    for p in proposals[:3]: print('  PROPOSAL:', p['expression'])
+    print('Archive query only; results are not an exhaustive proof.')
+
+
+# ============================================================
+# V4.4 - GENESIS JOURNAL, TANGENT LEDGER, EXACT COMPLEX BRANCH
+# ============================================================
+
+def journal(m, event_type, **details):
+    """Persistent logical ordering, not a fabricated history timestamp."""
+    g = m.get('genesis')
+    if g is None: return
+    count = m.get('_journal_run_count', 0)
+    if count >= MAX_JOURNAL_EVENTS_PER_RUN:
+        g['suppressed_events'] += 1
+        return
+    seq = g['next_seq']
+    g['next_seq'] += 1
+    g['events'].append({'seq': seq, 'run': len(m['runs']) + 1,
+                        'type': event_type, **details})
+    m['_journal_run_count'] = count + 1
+
+
+def tangent_parent(task):
+    kind = task['kind']
+    if kind in ('position', 'symbolic_position'):
+        return 'reference:%s:slot:%s' % (REFERENCE_INPUT, task['source_position'])
+    domain = ('symbolic' if kind.startswith('symbolic_') else
+              'complex' if kind in ('complex', 'complex_feedback') else 'rational')
+    for key in ('source', 'new', 'left', 'value'):
+        if key in task: return domain + ':' + str(task[key])
+    if 'items' in task: return domain + ':set:' + ','.join(map(str, task['items']))
+    return 'system:' + kind
+
+
+def upgrade_tracking_namespaces(m):
+    led = m['tangent_ledger']
+    if led.get('parent_namespace_version') == 1:
+        return
+    # Old aggregate rows cannot be separated reliably without their full log.
+    # Preserve them; all subsequent rows receive explicit archive prefixes.
+    led['parent_namespace_version'] = 1
+    led['parent_namespace_boundary'] = {
+        'previous_generated': led['generated'],
+        'previous_selected': led['selected'],
+        'previous_completed': led['completed'],
+        'legacy_untyped_rows_retained': True}
+    led.setdefault('paused', 0)
+    journal(m, 'typed_parent_tracking_boundary', **led['parent_namespace_boundary'])
+
+
+def tangent_generated(m, task):
+    led = m['tangent_ledger']
+    led['generated'] += 1
+    parent = tangent_parent(task)
+    slot = led['parents'].setdefault(parent, {'generated': 0, 'selected': 0, 'completed': 0})
+    slot['generated'] += 1
+    journal(m, 'tangent_queued', parent=parent, kind=task['kind'],
+            task_key=task_key(task), parent_generated=slot['generated'])
+
+
+def tangent_selected(m, task):
+    led = m['tangent_ledger']
+    led['selected'] += 1
+    parent = tangent_parent(task)
+    slot = led['parents'].setdefault(parent, {'generated': 0, 'selected': 0, 'completed': 0})
+    slot['selected'] += 1
+    journal(m, 'tangent_selected', parent=parent, kind=task['kind'],
+            task_key=task_key(task), reason='balanced_queue_order',
+            parent_selection=slot['selected'], pending=len(m['queue'])-m['queue_head'])
+
+
+def tangent_completed(m, task, selected_key=None):
+    led = m['tangent_ledger']
+    led['completed'] += 1
+    parent = tangent_parent(task)
+    slot = led['parents'].setdefault(parent, {'generated': 0, 'selected': 0, 'completed': 0})
+    slot['completed'] += 1
+    journal(m, 'tangent_completed', parent=parent, kind=task['kind'],
+            task_key=selected_key if selected_key is not None else task_key(task))
+
+
+def tangent_paused(m, task, selected_key):
+    led = m['tangent_ledger']
+    led['paused'] = led.get('paused', 0) + 1
+    parent = tangent_parent(task)
+    slot = led['parents'].setdefault(parent, {'generated': 0, 'selected': 0, 'completed': 0})
+    slot['paused'] = slot.get('paused', 0) + 1
+    journal(m, 'tangent_paused', parent=parent, kind=task['kind'],
+            task_key=selected_key, resume_task_key=task_key(task),
+            reason='expression_budget', resume_state=dict(task))
+
+
+def complex_key(a, b):
+    return encode(a) + ('+' if b >= 0 else '') + encode(b) + 'i'
+
+
+def _complex_operate_exact(a, b, op):
+    ar, ai = a
+    br, bi = b
+    if op == '+': return ar + br, ai + bi
+    if op == '-': return ar - br, ai - bi
+    if op == '*': return ar*br-ai*bi, ar*bi+ai*br
+    if op == '/':
+        denominator = br*br+bi*bi
+        if denominator == 0: return None
+        return (ar*br+ai*bi)/denominator, (ai*br-ar*bi)/denominator
+    raise ValueError(op)
+
+
+def complex_operate(a, b, op, tracking=None, context='complex_arithmetic_v44'):
+    result = zero_core(tracking, 'complex', operation=op, operands=(a, b))
+    record_kernel_operation(tracking, 'complex', op,
+                            'blocked' if result is None else 'succeeded', context,
+                            'division_by_zero' if result is None else None)
+    return result
+
+
+def complex_record(m, value, expr, parents, op, pathway, depth=None, sources=None):
+    ar, ai = value
+    if max(ar.numerator.bit_length(), ar.denominator.bit_length(),
+           ai.numerator.bit_length(), ai.denominator.bit_length()) > MAX_BITS:
+        return None
+    ca = m['complex_archive']
+    if depth is None:
+        depth = 0 if not parents else 1 + max(ca['expressions'][p]['depth'] for p in parents)
+    if depth > MAX_DEPTH:
+        return None
+    key = complex_key(ar, ai)
+    identity = json.dumps([expr, pathway, parents], separators=(',', ':'))
+    if identity in ca['known_keys']: return None
+    ca['known_keys'].append(identity)
+    idx = len(ca['expressions'])
+    ca['expressions'].append({'id': idx, 'expr': expr, 'real': encode(ar),
+        'imaginary': encode(ai), 'value': key, 'parents': parents,
+        'operation': op, 'pathway': pathway, 'depth': depth})
+    if sources is not None:
+        ca['expressions'][-1]['sources'] = sources
+    zero_core(m, 'complex', record=ca['expressions'][-1])
+    first = key not in ca['results']
+    ca['results'].setdefault(key, []).append(idx)
+    journal(m, 'complex_expression', complex_id=idx, value=key, expr=expr,
+            parents=parents, operation=op, first_value=first)
+    if 'v45_observations' in m:
+        observe_v45_complex(m, ca['expressions'][-1])
+    if ca.get('feedback_version') == 1:
+        schedule_complex_feedback(m)
+    if 'archive_integration' in m:
+        sync_archive_records(m, 'complex')
+    return idx
+
+
+def schedule_complex_feedback(m):
+    """One resumable cursor per eligible expression, including old records.
+
+    Pair each expression with every earlier expression and itself. Later
+    expressions handle their pairs with this one. This avoids creating an
+    entire quadratic list of pending pairs at once.
+    """
+    ca = m['complex_archive']
+    cursor = ca.get('feedback_scheduled_count', 0)
+    while cursor < len(ca['expressions']):
+        rec = ca['expressions'][cursor]
+        if rec['depth'] < MAX_DEPTH:
+            enqueue(m, {'kind': 'complex_feedback', 'source': cursor,
+                        'cursor': 0})
+        cursor += 1
+        ca['feedback_scheduled_count'] = cursor
+
+
+def upgrade_complex_feedback(m):
+    """Add feedback without deleting or renumbering archived expressions."""
+    ca = m['complex_archive']
+    # Existing V4.4/V4.5 records have no depth. Their parents precede them.
+    for rec in ca['expressions']:
+        if 'depth' not in rec:
+            rec['depth'] = (0 if not rec['parents'] else
+                            1 + max(ca['expressions'][p]['depth']
+                                    for p in rec['parents']))
+    ca['feedback_version'] = 1
+    schedule_complex_feedback(m)
+    m['rule_registry'].setdefault('complex_feedback_v452',
+                                  {'status': 'active_exploration_not_foundation'})
+
+
+def work_complex_feedback(m, task, stats):
+    source, cursor = task['source'], task['cursor']
+    if cursor > source:
+        return True
+    # Include self-pairs once; retain both orders for distinct operands.
+    pairs = [(source, cursor)]
+    if source != cursor:
+        pairs.append((cursor, source))
+    for left, right in pairs:
+        work_complex(m, {'left': left, 'right': right}, stats)
+    if cursor < source:
+        enqueue(m, {'kind': 'complex_feedback', 'source': source,
+                    'cursor': cursor + 1})
+    return True
+
+
+def work_complex(m, task, stats):
+    ca = m['complex_archive']
+    left = ca['expressions'][task['left']]
+    right = ca['expressions'][task['right']]
+    if max(left['depth'], right['depth']) + 1 > MAX_DEPTH:
+        return True
+    a = number(left['real']), number(left['imaginary'])
+    b = number(right['real']), number(right['imaginary'])
+    for op in OPERATIONS:
+        result = complex_operate(a, b, op, tracking=m)
+        if result is None:
+            journal(m, 'complex_blocked', left=left['id'], right=right['id'], operation=op, reason='zero_denominator')
+            continue
+        expr = '(' + left['expr'] + ' ' + op + ' ' + right['expr'] + ')'
+        complex_record(m, result, expr, [left['id'], right['id']], op,
+                       'complex_arithmetic_v44')
+    return True
+
+
+def upgrade_v44(m):
+    if 'genesis' not in m:
+        m['genesis'] = {'next_seq': 1, 'events': [], 'suppressed_events': 0,
+            'historical_boundary': {'previous_runs': len(m['runs']),
+             'previous_expressions': len(m['expressions']),
+             'note': 'Earlier precise event ordering unavailable; not reconstructed'}}
+    if 'tangent_ledger' not in m:
+        m['tangent_ledger'] = {'generated': 0, 'selected': 0, 'completed': 0,
+                               'parents': {}, 'duplicate_expressions': 0, 'duplicate_pending': 0,
+                               'historical_counts_not_reconstructed': True}
+    if 'complex_archive' not in m:
+        m['complex_archive'] = {'expressions': [], 'results': {}, 'known_keys': []}
+    # Prepare historical depths before any new records are constructed.
+    for rec in m['complex_archive']['expressions']:
+        if 'depth' not in rec:
+            rec['depth'] = (0 if not rec['parents'] else
+                            1 + max(m['complex_archive']['expressions'][p]['depth']
+                                    for p in rec['parents']))
+    m['rule_registry'].setdefault('complex_arithmetic_v44', {'status': 'active_exploration_not_foundation'})
+    if not m.get('v44_initialized'):
+        journal(m, 'v44_boundary', **m['genesis']['historical_boundary'])
+        # i and -i are explicitly seeded candidate domain elements, NOT
+        # derived from the rational state-count foundation or 0=i.
+        complex_record(m, (Fraction(0), Fraction(1)), 'i', [], 'seed', 'complex_unit_v44')
+        complex_record(m, (Fraction(0), Fraction(-1)), '-i', [], 'seed', 'complex_unit_v44')
+        # Rational values are represented exactly on the real axis.
+        for n in m['foundation']['states'][:8]:
+            complex_record(m, (Fraction(n), Fraction(0)), str(n), [], 'embed', 'rational_embedding_v44')
+        m['v44_initialized'] = True
+    # Add newly emerged rational foundation values without duplicating seeds.
+    ca = m['complex_archive']
+    for n in m['foundation']['states']:
+        complex_record(m, (Fraction(n), Fraction(0)), str(n), [], 'embed', 'rational_embedding_v44')
+    # Bounded new complex work: each new real-axis element is connected
+    # to i/-i; previous pending tasks survive runs.
+    seeded = m.setdefault('v44_complex_scheduled', [])
+    for item in ca['expressions']:
+        if item['pathway'] != 'rational_embedding_v44' or item['id'] in seeded:
+            continue
+        seeded.append(item['id'])
+        for imaginary_id in (0, 1):
+            enqueue(m, {'kind': 'complex', 'left': item['id'], 'right': imaginary_id})
+            enqueue(m, {'kind': 'complex', 'left': imaginary_id, 'right': item['id']})
+
+
+# ============================================================
+# V4.5 - OBSERVATIONAL CONVERGENCE HUBS AND STRUCTURAL ECHOES
+# Neither is a claim of physical attraction or mathematical emergence.
+# ============================================================
+
+
+def v45_signature(tree):
+    """Shape + operators, ignoring leaf values; never merges real paths."""
+    if isinstance(tree, dict):
+        if 'leaf' in tree:
+            return ['leaf']
+        return {str(k): v45_signature(v) for k, v in sorted(tree.items())}
+    if isinstance(tree, list):
+        return [v45_signature(x) for x in tree]
+    return tree
+
+
+def v45_signature_key(tree):
+    return json.dumps(v45_signature(tree), sort_keys=True, separators=(',', ':'))
+
+
+def v45_result_sign(value):
+    v = number(value)
+    return 1 if v > 0 else (-1 if v < 0 else 0)
+
+
+def observe_v45_real(m, record, historical=False):
+    obs = m['v45_observations']
+    value = record['value']
+    hub = obs['hubs'].setdefault(value, {'expressions': 0, 'distinct_parent_ids': [], 'first_expression': record['id']})
+    hub['expressions'] += 1
+    for parent in record.get('parents', []):
+        if parent not in hub['distinct_parent_ids']:
+            hub['distinct_parent_ids'].append(parent)
+    sign = v45_result_sign(value)
+    if not sign: return
+    sig = v45_signature_key(record['tree'])
+    signatures = m['_v45_signatures']
+    bucket = signatures.setdefault(sig, {})
+    other_id = bucket.get(encode(-number(value)))
+    bucket.setdefault(value, record['id'])
+    if other_id is not None:
+        other = m['expressions'][other_id]
+        obs['real_echo_events'] += 1
+        if len(obs['real_echo_examples']) < 100:
+            pair = [min(other_id, record['id']), max(other_id, record['id'])]
+            if pair not in obs['real_echo_examples']:
+                obs['real_echo_examples'].append(pair)
+        if not historical:
+            journal(m, 'real_structural_echo', expression_id=record['id'],
+                    mirror_id=other_id, value=value, mirror_value=other['value'],
+                    definition='same operator tree shape and opposite numerical result')
+
+
+def observe_v45_complex(m, record, historical=False):
+    obs = m['v45_observations']
+    ar, ai = number(record['real']), number(record['imaginary'])
+    if ai == 0: return
+    conjugate = complex_key(ar, -ai)
+    ids = m['complex_archive']['results'].get(conjugate, [])
+    mirror = next((i for i in ids if i != record['id']), None)
+    if mirror is None: return
+    obs['conjugate_echo_events'] += 1
+    if len(obs['conjugate_examples']) < 100:
+        pair = [min(mirror, record['id']), max(mirror, record['id'])]
+        if pair not in obs['conjugate_examples']:
+            obs['conjugate_examples'].append(pair)
+    if not historical:
+        journal(m, 'complex_conjugate_echo', complex_id=record['id'], mirror_id=mirror,
+                value=record['value'], mirror_value=conjugate)
+
+
+def upgrade_v45(m):
+    if 'v45_observations' not in m:
+        m['v45_observations'] = {
+            'historical_boundary': {'previous_runs': len(m['runs']),
+                'previous_real_expressions': len(m['expressions']),
+                'previous_complex_expressions': len(m['complex_archive']['expressions'])},
+            'hubs': {}, 'real_echo_events': 0, 'real_echo_examples': [],
+            'conjugate_echo_events': 0, 'conjugate_examples': []}
+        # Historical structural indexes can be reconstructed; execution
+        # order, eligible choices and timestamps are NOT invented.
+        m['_v45_signatures'] = {}
+        for rec in m['expressions']:
+            observe_v45_real(m, rec, historical=True)
+        for rec in m['complex_archive']['expressions']:
+            observe_v45_complex(m, rec, historical=True)
+        journal(m, 'v45_boundary', **m['v45_observations']['historical_boundary'])
+    else:
+        m['_v45_signatures'] = {}
+        for rec in m['expressions']:
+            sign = v45_result_sign(rec['value'])
+            if not sign: continue
+            bucket = m['_v45_signatures'].setdefault(v45_signature_key(rec['tree']), {})
+            bucket.setdefault(rec['value'], rec['id'])
+    m['rule_registry'].setdefault('convergence_hub_v45', {'status': 'observational_not_dynamical_attractor'})
+    m['rule_registry'].setdefault('structural_echo_v45', {'status': 'observational_not_numerical_identity'})
+
+
+def print_v45_summary(m):
+    obs = m['v45_observations']
+    hubs = sorted(obs['hubs'].items(), key=lambda item: (-len(item[1]['distinct_parent_ids']),
+                          -item[1]['expressions'], item[0]))[:8]
+    print('V4.5 convergence hubs (distinct parent IDs / expressions):')
+    for val, info in hubs:
+        print('  %s: %d / %d' % (val, len(info['distinct_parent_ids']), info['expressions']))
+    print('Real structural echo observations:', obs['real_echo_events'])
+    print('Complex conjugate echo observations:', obs['conjugate_echo_events'])
+    print('Echo examples retained:', len(obs['real_echo_examples']), 'real;',
+          len(obs['conjugate_examples']), 'complex')
+
+
+def parse_complex_query(text):
+    import re
+    compact = text.replace(' ', '').lower()
+    if 'i' not in compact: return None
+    if compact.count('i') != 1 or not compact.endswith('i'): raise ValueError('Expected a+bi, i or -i')
+    body = compact[:-1]
+    split = None
+    for pos in range(1, len(body)):
+        if body[pos] in '+-': split = pos
+    if split is None:
+        real, imaginary = Fraction(0), body
+    else:
+        real, imaginary = number(body[:split]), body[split:]
+    if imaginary in ('', '+'): imaginary = '1'
+    if imaginary == '-': imaginary = '-1'
+    return complex_key(number(real), number(imaginary))
+
+
+# ============================================================
+# V4.5.1 - READ-ONLY DISCOVERY INDEX (NO ARCHIVE MIGRATION)
+# ============================================================
+
+def discovery_index(m, command):
+    """Browse recorded results; missing values are not proof of unreachability."""
+    import re
+    words = command.strip().lower().split()
+    if not words or words[0] not in ('index', 'values', 'gaps', 'complex-index'):
+        return False
+    kind = words[0]
+    if kind == 'complex-index':
+        results = m.get('complex_archive', {}).get('results', {})
+        print('\nCOMPLEX DISCOVERY INDEX: %d distinct values' % len(results))
+        for key, ids in sorted(results.items(), key=lambda kv: kv[0])[:100]:
+            print('  %-22s %d expressions' % (key, len(ids)))
+        if len(results) > 100: print('  ... %d more; use i or a+bi to query individual values' % (len(results)-100))
+        return True
+    if kind == 'gaps':
+        if len(words) != 3:
+            print('Usage: gaps MIN MAX (example: gaps -30 30)')
+            return True
+        try:
+            lo, hi = int(words[1]), int(words[2])
+        except ValueError:
+            print('Please use integer endpoints, e.g. gaps -30 30')
+            return True
+        if hi < lo or hi-lo > 1000:
+            print('Choose an ascending range of at most 1001 integers.')
+            return True
+        absent = [n for n in range(lo, hi+1) if encode(Fraction(n)) not in m['results']]
+        print('\nNOT ARCHIVED in [%d, %d]: %d integers' % (lo, hi, len(absent)))
+        print(', '.join(map(str, absent)) if absent else '(none)')
+        print('Not archived does not mean impossible or never attempted.')
+        return True
+    entries = []
+    for key, ids in m['results'].items():
+        if not ids: continue
+        try: value = Fraction(key)
+        except (ValueError, ZeroDivisionError): continue
+        entries.append((value, ids))
+    entries.sort(key=lambda item: item[0])
+    if len(words) == 3:
+        try: lo, hi = Fraction(words[1]), Fraction(words[2])
+        except (ValueError, ZeroDivisionError):
+            print('Usage: index [MIN MAX], e.g. index -10 10')
+            return True
+        entries = [(value, ids) for value, ids in entries if lo <= value <= hi]
+    elif len(words) != 1:
+        print('Usage: index [MIN MAX], e.g. index -10 10')
+        return True
+    print('\nREAL DISCOVERY INDEX: %d archived values' % len(entries))
+    for value, ids in entries[:120]:
+        first = m['expressions'][ids[0]]
+        print('  %-12s paths=%-5d first=#%-5d %s' %
+              (str(value), len(ids), ids[0], first.get('pathway', '?')))
+    if len(entries) > 120:
+        print('  ... %d more. Narrow with index MIN MAX.' % (len(entries)-120))
+    print('First=# is archive insertion order, not historical scheduler decision order.')
+    return True
+
+
+def query_v45(m, text):
+    if discovery_index(m, text): return True
+    if text.lower() in ('hubs', 'attractors', 'echoes'):
+        print_v45_summary(m)
+        if text.lower() == 'echoes':
+            for a, b in m['v45_observations']['real_echo_examples'][:8]:
+                x, y = m['expressions'][a], m['expressions'][b]
+                print('  Real echo: #%d %s = %s | #%d %s = %s' %
+                      (a, x['expr'], x['value'], b, y['expr'], y['value']))
+            for a, b in m['v45_observations']['conjugate_examples'][:8]:
+                x, y = m['complex_archive']['expressions'][a], m['complex_archive']['expressions'][b]
+                print('  Complex echo: %s | %s' % (x['value'], y['value']))
+        return True
+    if 'archive_integration' in m and query_unified(m, text):
+        return True
+    try: key = parse_complex_query(text)
+    except (ValueError, ZeroDivisionError) as exc:
+        print('Complex query format: i, -i, 2+3i, 1/2-4i. Error:', exc)
+        return True
+    if key is None: return False
+    ca = m['complex_archive']
+    ids = ca['results'].get(key, [])
+    print('Complex value %s: %d archived expressions' % (key, len(ids)))
+    for idx in ids[:20]:
+        rec = ca['expressions'][idx]
+        print('  C#%d %s [%s]' % (idx, rec['expr'], rec['pathway']))
+    if len(ids) > 20: print('  ... %d more' % (len(ids) - 20))
+    return True
+
+
+# ============================================================
+# V4.6 - EXACT ALGEBRAIC EXPRESSIONS WITH SYMPY
+# New operations are extensions, not changes to the foundation.
+# ============================================================
+
+def sympy_module():
+    try:
+        import sympy
+    except ImportError as exc:
+        raise RuntimeError('SymPy is required for V4.6.4. In Pydroid3, open Pip, '
+                           'install sympy, then run this script again. '
+                           'Your saved memory has not been changed.') from exc
+    return sympy
+
+
+def symbolic_pack(value):
+    """JSON-safe exact expression tree; never serialize executable code."""
+    sp = sympy_module()
+    if value.is_Rational:
+        return {'q': [str(value.p), str(value.q)]}
+    if value == sp.I:
+        return {'i': True}
+    names = {sp.Add: 'add', sp.Mul: 'mul', sp.Pow: 'pow'}
+    if value.func not in names:
+        raise ValueError('Unsupported exact symbolic object')
+    return {'fn': names[value.func],
+            'args': [symbolic_pack(v) for v in value.args]}
+
+
+def symbolic_unpack(tree, depth=0):
+    """Rebuild only the explicitly supported mathematical constructors."""
+    sp = sympy_module()
+    if depth > SYMBOLIC_MAX_NODES:
+        raise ValueError('Symbolic tree exceeds the nesting limit')
+    if 'q' in tree:
+        return sp.Rational(int(tree['q'][0]), int(tree['q'][1]))
+    if tree.get('i') is True:
+        return sp.I
+    constructors = {'add': sp.Add, 'mul': sp.Mul, 'pow': sp.Pow}
+    constructor = constructors.get(tree.get('fn'))
+    if constructor is None:
+        raise ValueError('Unknown symbolic constructor')
+    return constructor(*(symbolic_unpack(v, depth + 1) for v in tree['args']))
+
+
+def symbolic_within_limits(value):
+    sp = sympy_module()
+    nodes = list(sp.preorder_traversal(value))
+    if len(nodes) > SYMBOLIC_MAX_NODES:
+        return False
+    if value.has(sp.nan, sp.zoo, sp.oo, -sp.oo) or value.is_finite is False:
+        return False
+    return all(max(int(v.p).bit_length(), int(v.q).bit_length()) <= MAX_BITS
+               for v in nodes if v.is_Rational)
+
+
+def _symbolic_apply_exact(a, op, b=None):
+    """Exact arithmetic, bounded rational powers, principal square roots."""
+    sp = sympy_module()
+    if op == 'sqrt':
+        # Factoring an arbitrary 256-bit integer inside sqrt can be costly.
+        # This is a resource bound, not a restriction of mathematics.
+        if any(max(int(v.p).bit_length(), int(v.q).bit_length()) > SYMBOLIC_MAX_ROOT_BITS
+               for v in sp.preorder_traversal(a) if v.is_Rational):
+            return None, 'root_resource_limit'
+        result = sp.sqrt(a)
+    elif op == '+': result = a + b
+    elif op == '-': result = a - b
+    elif op == '*': result = a * b
+    elif op == '/':
+        if b.is_zero is not False:
+            return None, 'zero_or_unresolved_denominator'
+        result = a / b
+    elif op == '**':
+        if not b.is_Rational or abs(b.p) > SYMBOLIC_MAX_POWER or b.q > SYMBOLIC_MAX_POWER:
+            return None, 'power_exponent_limit'
+        if a.is_zero is True and b <= 0:
+            return None, 'zero_to_nonpositive_power'
+        if b < 0 and a.is_zero is not False:
+            return None, 'zero_or_unresolved_base'
+        if b.q != 1 and any(
+                max(int(v.p).bit_length(), int(v.q).bit_length()) > SYMBOLIC_MAX_ROOT_BITS
+                for v in sp.preorder_traversal(a) if v.is_Rational):
+            return None, 'root_resource_limit'
+        # Avoid constructing giant rational powers before checking size.
+        if a.is_Rational and max(int(a.p).bit_length(), int(a.q).bit_length()) * abs(int(b.p)) > MAX_BITS:
+            return None, 'power_resource_limit'
+        result = a ** b
+    else:
+        raise ValueError('Unsupported symbolic operation')
+    if not symbolic_within_limits(result):
+        return None, 'symbolic_resource_limit'
+    # Distribute products so (sqrt(2)+1)*(sqrt(2)-1) can return to 1.
+    expanded = sp.expand_mul(result)
+    if symbolic_within_limits(expanded):
+        result = expanded
+    return result, None
+
+
+def symbolic_apply(a, op, b=None, tracking=None, context='exact_algebraic_v46'):
+    result, reason = zero_core(tracking, 'symbolic', operation=op, operands=(a, b))
+    blocked = {'zero_or_unresolved_denominator', 'zero_to_nonpositive_power',
+               'zero_or_unresolved_base'}
+    outcome = 'succeeded' if reason is None else ('blocked' if reason in blocked else 'limited')
+    record_kernel_operation(tracking, 'symbolic', op, outcome, context, reason)
+    return result, reason
+
+
+def symbolic_value(m, idx):
+    cache = m.setdefault('_symbolic_values', {})
+    if idx not in cache:
+        cache[idx] = symbolic_unpack(m['symbolic_archive']['expressions'][idx]['exact'])
+    return cache[idx]
+
+
+def schedule_symbolic_feedback(m, rec):
+    if rec['depth'] < MAX_DEPTH:
+        enqueue(m, {'kind': 'symbolic_root', 'source': rec['id']})
+        enqueue(m, {'kind': 'symbolic_pair', 'source': rec['id'],
+                    'cursor': 0, 'step': 0})
+
+
+def bridge_symbolic_result(m, rec, value, stats=None):
+    """Embed new exact numeric values with typed cross-archive provenance."""
+    ref = {'archive': 'symbolic', 'id': rec['id']}
+    if value.is_Rational:
+        key = encode(Fraction(int(value.p), int(value.q)))
+        if key not in m['results']:
+            leaf = int(value.p) if value.q == 1 else key
+            idx = add_expression(m, {
+                'expr': key, 'value': key,
+                'tree': {'leaf': leaf, 'symbolic_source': rec['id']},
+                'depth': rec['depth'], 'parents': [], 'leaves': [leaf],
+                'pathway': 'symbolic_to_rational_v46', 'domain': 'rational',
+                'sources': [ref], 'ancestry': [{'rule': 'exact_numeric_embedding',
+                    'source': ref, 'source_expression': rec['expr']}]})
+            if idx is not None:
+                schedule_frontier(m, idx)
+                if rec['depth'] < MAX_DEPTH:
+                    enqueue(m, {'kind': 'revisit', 'new': idx, 'cursor': 0,
+                                'rule': 'revisit_v1'})
+                if stats is not None:
+                    stats['new'] += 1
+    real, imaginary = value.as_real_imag()
+    if real.is_Rational and imaginary.is_Rational:
+        ar = Fraction(int(real.p), int(real.q))
+        ai = Fraction(int(imaginary.p), int(imaginary.q))
+        if complex_key(ar, ai) not in m['complex_archive']['results']:
+            complex_record(m, (ar, ai), str(value), [], 'embed',
+                           'symbolic_to_complex_v46', depth=rec['depth'],
+                           sources=[ref])
+
+
+def symbolic_record(m, value, expr, parents, operation, pathway,
+                    sources=None, depth=None, stats=None, construction=None, nexus=None):
+    if not symbolic_within_limits(value):
+        return None
+    sa = m['symbolic_archive']
+    if depth is None:
+        depth = 0 if not parents else 1 + max(sa['expressions'][p]['depth'] for p in parents)
+    if depth > MAX_DEPTH:
+        return None
+    sources = sources or []
+    identity = json.dumps([pathway, operation, parents, sources, expr],
+                          sort_keys=True, separators=(',', ':'))
+    keys = m.get('_symbolic_keys')
+    if keys is None:
+        keys = set(sa['known_keys'])
+        m['_symbolic_keys'] = keys
+    if identity in keys:
+        return None
+    keys.add(identity)
+    sa['known_keys'].append(identity)
+    idx = len(sa['expressions'])
+    rec = {'id': idx, 'expr': expr, 'value': str(value),
+           'exact': symbolic_pack(value), 'parents': parents,
+           'operation': operation, 'pathway': pathway,
+           'sources': sources, 'depth': depth}
+    if construction is not None:
+        rec['construction'] = construction
+    if nexus is not None:
+        rec['nexus'] = nexus
+    zero_core(m, 'symbolic', record=rec)
+    sa['expressions'].append(rec)
+    ensure_symbolic_construction(m, rec)
+    sa['results'].setdefault(rec['value'], []).append(idx)
+    m.setdefault('_symbolic_values', {})[idx] = value
+    schedule_symbolic_feedback(m, rec)
+    if sa.get('zero_nexus_version') == 1:
+        schedule_symbolic_zero_feedback(m)
+    if pathway in ('numeric_to_symbolic_v46', 'numeric_to_symbolic_v464') and len(sources) == 1:
+        source = sources[0]
+        if source['archive'] in ('rational', 'complex'):
+            sa.setdefault('source_import_links', {'rational': {}, 'complex': {}})[source['archive']][str(source['id'])] = idx
+    if 'archive_integration' in m:
+        sync_archive_records(m, 'symbolic')
+    journal(m, 'symbolic_expression', symbolic_id=idx, value=rec['value'],
+            parents=parents, sources=sources, operation=operation)
+    bridge_symbolic_result(m, rec, value, stats)
+    return idx
+
+
+def upgrade_symbolic(m):
+    sympy_module()  # Fail before mutating or saving memory if unavailable.
+    sa = m.setdefault('symbolic_archive', {
+        'schema': 1, 'expressions': [], 'results': {}, 'known_keys': [],
+        'import_cursors': {'rational': 0, 'complex': 0}, 'skipped': {}})
+    m['_symbolic_keys'] = set(sa['known_keys'])
+    m['_symbolic_values'] = {}
+    upgrade_construction_imports(m)
+    m['rule_registry'].setdefault('exact_algebraic_v46', {
+        'status': 'active_exploration_not_foundation',
+        'operations': ['+', '-', '*', '/', '**', 'sqrt'],
+        'root_convention': 'principal_complex_root',
+        'power_exponents': 'bounded_rationals'})
+
+
+def upgrade_construction_imports(m):
+    sa = m['symbolic_archive']
+    if sa.get('construction_import_version') == 1:
+        return
+    sa['construction_import_version'] = 1
+    sa['construction_import_cursors'] = {'rational': 0, 'complex': 0}
+    sa['source_import_links'] = {'rational': {}, 'complex': {}}
+    sa['source_import_kinds'] = {'rational': {}, 'complex': {}}
+    sa['import_deferred'] = {'rational': {}, 'complex': {}}
+    # Earlier representative imports remain valid records. Reuse them where
+    # their construction is complete; scan source IDs from zero to fill gaps.
+    for rec in sa['expressions']:
+        if rec['pathway'] not in ('numeric_to_symbolic_v46', 'numeric_to_symbolic_v464'):
+            continue
+        if len(rec.get('sources', [])) == 1:
+            ref = rec['sources'][0]
+            if ref['archive'] in sa['source_import_links']:
+                sa['source_import_links'][ref['archive']][str(ref['id'])] = rec['id']
+
+
+def complex_symbolic_construction(m, idx):
+    cache = m.setdefault('_complex_constructions', {})
+    if idx in cache:
+        return cache[idx]
+    sp = sympy_module()
+    rec = m['complex_archive']['expressions'][idx]
+    if rec['parents'] and rec['operation'] in OPERATIONS:
+        tree = {'op': rec['operation'], 'args': [
+            complex_symbolic_construction(m, parent) for parent in rec['parents']]}
+    elif rec['pathway'] == 'symbolic_to_complex_v46' and rec.get('sources'):
+        tree = ensure_symbolic_construction(m,
+            m['symbolic_archive']['expressions'][rec['sources'][0]['id']])
+    else:
+        ar, ai = number(rec['real']), number(rec['imaginary'])
+        value = sp.Rational(ar.numerator, ar.denominator) + sp.I * sp.Rational(ai.numerator, ai.denominator)
+        tree = {'exact': symbolic_pack(value)}
+    cache[idx] = tree
+    return tree
+
+
+def import_numeric_construction(m, domain, source_id):
+    sp = sympy_module()
+    sa = m['symbolic_archive']
+    upgrade_construction_imports(m)
+    archive = m if domain == 'rational' else m['complex_archive']
+    source = archive['expressions'][source_id]
+    key = str(source_id)
+    ref = {'archive': domain, 'id': source_id}
+    # A numeric embedding is already the same construction represented in
+    # another archive. Link its origin; importing a fresh wrapper repeatedly
+    # would create an endless symbolic -> numeric -> symbolic mirror chain.
+    if (source['pathway'] in ('symbolic_to_rational_v46', 'symbolic_to_complex_v46')
+            and not source['parents'] and len(source.get('sources', [])) == 1
+            and source['sources'][0]['archive'] == 'symbolic'):
+        origin = source['sources'][0]['id']
+        if type(origin) is not int or not 0 <= origin < len(sa['expressions']):
+            raise ValueError('Numeric embedding has a missing symbolic origin')
+        sa['source_import_links'][domain][key] = origin
+        sa['source_import_kinds'][domain][key] = 'representation_link'
+        sa['import_deferred'][domain].pop(key, None)
+        return origin
+    if domain == 'rational':
+        q = number(source['value'])
+        value = sp.Rational(q.numerator, q.denominator)
+        tree = rational_symbolic_construction(m, source['tree'])
+    else:
+        ar, ai = number(source['real']), number(source['imaginary'])
+        value = sp.Rational(ar.numerator, ar.denominator) + sp.I * sp.Rational(ai.numerator, ai.denominator)
+        tree = complex_symbolic_construction(m, source_id)
+    existing = sa['source_import_links'][domain].get(key)
+    if existing is not None:
+        rec = sa['expressions'][existing]
+        if rec.get('construction') == tree and rec.get('sources') == [ref]:
+            sa['source_import_kinds'][domain][key] = 'construction_import'
+            sa['import_deferred'][domain].pop(key, None)
+            return existing
+    idx = symbolic_record(m, value, source['expr'], [], 'embed',
+                          'numeric_to_symbolic_v464', sources=[ref],
+                          depth=source['depth'], construction=tree)
+    if idx is None:
+        for candidate in sa['results'].get(str(value), []):
+            rec = sa['expressions'][candidate]
+            if rec.get('sources') == [ref] and rec.get('construction') == tree:
+                idx = candidate
+                break
+    if idx is None:
+        sa['import_deferred'][domain][key] = {
+            'reason': 'depth_or_value_limit', 'source_depth': source['depth']}
+        return None
+    sa['source_import_links'][domain][key] = idx
+    sa['source_import_kinds'][domain][key] = 'construction_import'
+    sa['import_deferred'][domain].pop(key, None)
+    return idx
+
+
+def import_symbolic_sources(m):
+    """Visit every source expression ID, with persisted per-archive cursors."""
+    sa = m['symbolic_archive']
+    upgrade_construction_imports(m)
+    limits = [MAX_DEPTH, MAX_BITS, SYMBOLIC_MAX_NODES]
+    previous = sa.get('construction_import_limits')
+    if previous is not None and previous != limits:
+        # Revisit explicitly deferred imports after configuration changes.
+        # Existing source links prevent duplicate imports during the scan.
+        sa['construction_import_cursors'] = {'rational': 0, 'complex': 0}
+    sa['construction_import_limits'] = limits
+    for domain, archive in (('rational', m), ('complex', m['complex_archive'])):
+        cursor = sa['construction_import_cursors'][domain]
+        stop = min(len(archive['expressions']), cursor + SYMBOLIC_IMPORT_PER_RUN)
+        while cursor < stop:
+            import_numeric_construction(m, domain, cursor)
+            cursor += 1
+            sa['construction_import_cursors'][domain] = cursor
+
+
+def rational_symbolic_construction(m, tree):
+    """Keep original zero leaves when importing a rational construction."""
+    sp = sympy_module()
+    if 'symbolic_source' in tree:
+        origin = m['symbolic_archive']['expressions'][tree['symbolic_source']]
+        return ensure_symbolic_construction(m, origin)
+    if 'leaf' in tree:
+        q = number(tree['leaf'])
+        return {'exact': symbolic_pack(sp.Rational(q.numerator, q.denominator))}
+    return {'op': tree['op'], 'args': [
+        rational_symbolic_construction(m, tree['left']),
+        rational_symbolic_construction(m, tree['right'])]}
+
+
+def ensure_symbolic_construction(m, rec):
+    """Construction order is independent of the simplified exact value."""
+    if 'construction' in rec:
+        return rec['construction']
+    if rec['operation'] in SYMBOLIC_BINARY_OPERATIONS + ('sqrt',) and rec['parents']:
+        tree = {'op': rec['operation'], 'args': [
+            ensure_symbolic_construction(m, m['symbolic_archive']['expressions'][p])
+            for p in rec['parents']]}
+    elif rec['pathway'] in ('numeric_to_symbolic_v46', 'numeric_to_symbolic_v464') and rec['sources']:
+        source = rec['sources'][0]
+        if source['archive'] == 'rational':
+            tree = rational_symbolic_construction(m, m['expressions'][source['id']]['tree'])
+        else:
+            tree = complex_symbolic_construction(m, source['id'])
+    else:
+        tree = {'exact': rec['exact']}
+    rec['construction'] = tree
+    return tree
+
+
+def symbolic_zero_paths(tree, path=()):
+    if 'exact' in tree:
+        return [path] if tree['exact'] == {'q': ['0', '1']} else []
+    paths = []
+    for idx, child in enumerate(tree['args']):
+        paths.extend(symbolic_zero_paths(child, path + (idx,)))
+    return paths
+
+
+def replace_symbolic_slot(tree, path, replacement):
+    if not path:
+        return replacement
+    args = list(tree['args'])
+    args[path[0]] = replace_symbolic_slot(args[path[0]], path[1:], replacement)
+    return {'op': tree['op'], 'args': args}
+
+
+def symbolic_construction_depth(tree):
+    if 'exact' in tree:
+        return 0
+    return 1 + max(symbolic_construction_depth(child) for child in tree['args'])
+
+
+def evaluate_symbolic_construction(tree, tracking=None):
+    if 'exact' in tree:
+        value = symbolic_unpack(tree['exact'])
+        return value, '(' + str(value) + ')', None
+    children = [evaluate_symbolic_construction(child, tracking) for child in tree['args']]
+    for _, _, reason in children:
+        if reason:
+            return None, '', reason
+    op = tree['op']
+    a, ae, _ = children[0]
+    if op == 'sqrt':
+        value, reason = symbolic_apply(a, op, tracking=tracking, context='zero_nexus_symbolic_v461')
+        expr = 'sqrt(' + ae + ')'
+    else:
+        b, be, _ = children[1]
+        value, reason = symbolic_apply(a, op, b, tracking=tracking, context='zero_nexus_symbolic_v461')
+        expr = '(' + ae + ' ' + op + ' ' + be + ')'
+    return value, expr, reason
+
+
+def schedule_symbolic_zero_feedback(m):
+    sa = m['symbolic_archive']
+    cursor = sa.get('zero_feedback_scheduled_count', 0)
+    while cursor < len(sa['expressions']):
+        rec = sa['expressions'][cursor]
+        if rec['depth'] < MAX_DEPTH:
+            enqueue(m, {'kind': 'symbolic_nexus', 'source': cursor,
+                        'cursor': 0, 'direction': 0, 'slot': 0})
+        cursor += 1
+        sa['zero_feedback_scheduled_count'] = cursor
+
+
+def schedule_symbolic_zero_positions(m):
+    seen = m.setdefault('symbolic_zero_positions_scheduled', [])
+    for state in m['foundation']['states']:
+        if state > 9 or state in seen:
+            continue
+        for slot in m['reference']['slots']:
+            if slot['kind'] != 'persistent_zero':
+                continue
+            common = {'kind': 'symbolic_position', 'source_position': slot['source_position'],
+                      'selected_value': state}
+            enqueue(m, {**common, 'op': '**', 'order': 'zero_first'})
+            enqueue(m, {**common, 'op': '**', 'order': 'zero_last'})
+            if state == 0:
+                enqueue(m, {**common, 'op': 'sqrt', 'order': 'unary_zero'})
+        seen.append(state)
+
+
+def upgrade_symbolic_zero_nexus(m):
+    sa = m['symbolic_archive']
+    for rec in sa['expressions']:
+        ensure_symbolic_construction(m, rec)
+    sa['zero_nexus_version'] = 1
+    if 'zero_nexus_keys' not in sa:
+        sa['zero_nexus_keys'] = [json.dumps([rec['pathway'], rec['construction']],
+            sort_keys=True, separators=(',', ':'))
+            for rec in sa['expressions'] if 'nexus' in rec]
+    m['_symbolic_nexus_keys'] = set(sa['zero_nexus_keys'])
+    m.setdefault('symbolic_nexus_events', [])
+    schedule_symbolic_zero_feedback(m)
+    schedule_symbolic_zero_positions(m)
+    m['rule_registry'].setdefault('zero_nexus_symbolic_v461', {
+        'status': 'active_exploration_not_foundation',
+        'meaning': 'replace_one_numeric_zero_slot_with_available_expression',
+        'operations': list(SYMBOLIC_BINARY_OPERATIONS) + ['sqrt']})
+
+
+def record_symbolic_nexus(m, tree, parents, event, pathway, stats):
+    sa = m['symbolic_archive']
+    # Match the existing nexus policy: one record per construction and rule.
+    # Replacing bare zero with the same value repeatedly must not create
+    # unbounded depth-zero copies distinguished only by their parent IDs.
+    identity = json.dumps([pathway, tree], sort_keys=True, separators=(',', ':'))
+    keys = m.get('_symbolic_nexus_keys')
+    if keys is None:
+        keys = set(sa.setdefault('zero_nexus_keys', []))
+        m['_symbolic_nexus_keys'] = keys
+    if identity in keys:
+        sa['zero_nexus_duplicates'] = sa.get('zero_nexus_duplicates', 0) + 1
+        journal(m, 'duplicate_symbolic_nexus', parents=parents, **event)
+        return
+    # Embedding/import depth must not be reset by a slot transformation.
+    depth = max(symbolic_construction_depth(tree),
+                max(sa['expressions'][p]['depth'] for p in parents))
+    if depth > MAX_DEPTH:
+        return
+    value, expr, reason = evaluate_symbolic_construction(tree, tracking=m)
+    if reason:
+        sa['skipped'][reason] = sa['skipped'].get(reason, 0) + 1
+        journal(m, 'symbolic_nexus_blocked', reason=reason, **event)
+        return
+    idx = symbolic_record(m, value, expr, parents, 'zero_slot_construction',
+                          pathway, depth=depth, stats=stats,
+                          construction=tree, nexus=event)
+    if idx is not None:
+        keys.add(identity)
+        sa['zero_nexus_keys'].append(identity)
+        m['symbolic_nexus_events'].append({'symbolic_result_id': idx, **event})
+        stats['symbolic_new'] = stats.get('symbolic_new', 0) + 1
+        journal(m, 'symbolic_nexus_transformation', symbolic_result_id=idx, **event)
+
+
+def work_symbolic_nexus(m, task, stats):
+    """One zero-slot replacement per task, with a persistent pair cursor."""
+    sa = m['symbolic_archive']
+    new, cursor = task['source'], task['cursor']
+    direction, slot = task['direction'], task['slot']
+    source_id, value_id = (new, cursor) if direction == 0 else (cursor, new)
+    source, selected = sa['expressions'][source_id], sa['expressions'][value_id]
+    paths = symbolic_zero_paths(source['construction'])
+    if slot + 1 < len(paths):
+        enqueue(m, {**task, 'slot': slot + 1})
+    elif direction == 0 and new != cursor:
+        enqueue(m, {**task, 'direction': 1, 'slot': 0})
+    elif cursor < new:
+        enqueue(m, {**task, 'cursor': cursor + 1, 'direction': 0, 'slot': 0})
+    if slot >= len(paths) or symbolic_value(m, value_id).is_zero is True:
+        return True
+    path = paths[slot]
+    transformed = replace_symbolic_slot(source['construction'], path, selected['construction'])
+    event = {'zero_nexus': 'Z0', 'source_id': source_id,
+             'selected_value_id': value_id, 'zero_slot_path': list(path),
+             'rule': 'zero_nexus_symbolic_v461'}
+    record_symbolic_nexus(m, transformed, [source_id, value_id], event,
+                          'zero_nexus_symbolic_v461', stats)
+    return True
+
+
+def symbolic_rational_reference(m, real_id):
+    idx = import_numeric_construction(m, 'rational', real_id)
+    if idx is None:
+        raise ValueError('Unable to reference foundation expression symbolically')
+    return idx
+
+
+def work_symbolic_position(m, task, stats):
+    state = task['selected_value']
+    real_id = next(idx for idx in m['results'][str(state)]
+                   if m['expressions'][idx]['pathway'] == 'foundation_state_count_v3')
+    zero_real = next(idx for idx in m['results']['0']
+                     if m['expressions'][idx]['pathway'] == 'foundation_state_count_v3')
+    selected = symbolic_rational_reference(m, real_id)
+    zero = symbolic_rational_reference(m, zero_real)
+    parents = [zero] if task['op'] == 'sqrt' else (
+        [zero, selected] if task['order'] == 'zero_first' else [selected, zero])
+    sa = m['symbolic_archive']
+    tree = {'op': task['op'], 'args': [sa['expressions'][p]['construction'] for p in parents]}
+    event = {'zero_nexus': 'Z0', 'source': REFERENCE_INPUT,
+             'source_position': task['source_position'], 'selected_value': state,
+             'operation': task['op'], 'order': task['order'],
+             'rule': 'zero_nexus_symbolic_position_v461'}
+    pathway = event['rule'] + '_slot_' + str(task['source_position'])
+    record_symbolic_nexus(m, tree, parents, event, pathway, stats)
+    return True
+
+
+def work_symbolic(m, task, stats):
+    sa = m['symbolic_archive']
+    source = sa['expressions'][task['source']]
+    if task['kind'] == 'symbolic_root':
+        parents, op = [source['id']], 'sqrt'
+        a, b = symbolic_value(m, source['id']), None
+        expr = 'sqrt(' + source['expr'] + ')'
+    else:
+        cursor, step = task['cursor'], task['step']
+        # Visit self first, then earlier expressions in insertion order.
+        # This exposes squares/powers promptly without starving other pairs.
+        other_id = source['id'] if cursor == 0 else cursor - 1
+        other = sa['expressions'][other_id]
+        left, right = (source, other) if step < 5 else (other, source)
+        op = SYMBOLIC_BINARY_OPERATIONS[step % 5]
+        parents = [left['id'], right['id']]
+        a, b = symbolic_value(m, left['id']), symbolic_value(m, right['id'])
+        expr = '(' + left['expr'] + ' ' + op + ' ' + right['expr'] + ')'
+        # One operation per task. Cursor/step survive interruption between runs.
+        end = 5 if cursor == 0 else 10
+        if step + 1 < end:
+            enqueue(m, {**task, 'step': step + 1})
+        elif cursor < source['id']:
+            enqueue(m, {**task, 'cursor': cursor + 1, 'step': 0})
+    depth = 1 + max(sa['expressions'][p]['depth'] for p in parents)
+    if depth > MAX_DEPTH:
+        return True
+    result, reason = symbolic_apply(a, op, b, tracking=m)
+    if result is None:
+        sa['skipped'][reason] = sa['skipped'].get(reason, 0) + 1
+        journal(m, 'symbolic_operation_skipped', parents=parents,
+                operation=op, reason=reason)
+        return True
+    idx = symbolic_record(m, result, expr, parents, op,
+                          'exact_algebraic_v46', stats=stats)
+    if idx is not None:
+        stats['symbolic_new'] = stats.get('symbolic_new', 0) + 1
+    return True
+
+
+def parse_symbolic_query(text):
+    """Parse a restricted arithmetic grammar; never eval/sympify user text."""
+    import ast
+    sp = sympy_module()
+    text = text.strip().replace('^', '**')
+    if len(text) > 500:
+        raise ValueError('Query too long')
+    tree = ast.parse(text, mode='eval')
+    if sum(1 for _ in ast.walk(tree)) > SYMBOLIC_MAX_NODES:
+        raise ValueError('Query too complex')
+    def visit(node):
+        if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+            token = ast.get_source_segment(text, node)
+            # Fractions accepts decimal/exponent text exactly, without floats.
+            if len(token) > 80 or ('e' in token.lower() and abs(int(token.lower().split('e')[1])) > 80):
+                raise ValueError('Number exceeds query limit')
+            q = Fraction(token)
+            value = sp.Rational(q.numerator, q.denominator)
+        elif isinstance(node, ast.Name) and node.id in ('i', 'I'):
+            value = sp.I
+        elif isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+            child = visit(node.operand)
+            value = child if isinstance(node.op, ast.UAdd) else -child
+        elif isinstance(node, ast.BinOp):
+            op = {ast.Add: '+', ast.Sub: '-', ast.Mult: '*',
+                  ast.Div: '/', ast.Pow: '**'}.get(type(node.op))
+            if op is None:
+                raise ValueError('Unsupported query operation')
+            value, reason = symbolic_apply(visit(node.left), op, visit(node.right))
+            if reason:
+                raise ValueError(reason)
+        elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+              and node.func.id == 'sqrt' and len(node.args) == 1 and not node.keywords):
+            value, reason = symbolic_apply(visit(node.args[0]), 'sqrt')
+            if reason:
+                raise ValueError(reason)
+        else:
+            raise ValueError('Use numbers, i, sqrt(...), + - * / and **')
+        if not symbolic_within_limits(value):
+            raise ValueError('Query exceeds symbolic limits')
+        return value
+    return visit(tree.body)
+
+
+def query_symbolic(m, text):
+    words = text.strip().split(maxsplit=1)
+    if not words or words[0].lower() not in ('symbolic', 'symbolic-index'):
+        return False
+    if words[0].lower() == 'symbolic' and 'archive_integration' in m:
+        return query_unified(m, text)
+    sa = m['symbolic_archive']
+    if words[0].lower() == 'symbolic-index':
+        print('\nSYMBOLIC INDEX: %d stored exact forms' % len(sa['results']))
+        for value, ids in list(sa['results'].items())[:100]:
+            print('  %s: %d expressions' % (value, len(ids)))
+        if len(sa['results']) > 100: print('  ... use symbolic EXPRESSION to query a value')
+        return True
+    try:
+        if len(words) != 2:
+            raise ValueError('Usage: symbolic sqrt(2), symbolic 2**3, symbolic sqrt(-2)')
+        key = str(parse_symbolic_query(words[1]))
+    except (ValueError, SyntaxError, ZeroDivisionError, OverflowError) as exc:
+        print('Symbolic query:', exc)
+        return True
+    ids = sa['results'].get(key, [])
+    print('\nExact form %s: %d archived expressions' % (key, len(ids)))
+    for idx in ids[:20]:
+        rec = sa['expressions'][idx]
+        print('  S#%d %s [%s; parents=%s; sources=%s]' %
+              (idx, rec['expr'], rec['pathway'], rec['parents'], rec['sources']))
+        if 'nexus' in rec:
+            print('    Zero nexus:', rec['nexus'])
+    print('Archive lookup only; equivalent algebraic forms may have separate keys.')
+    return True
+
+
+def operation_counter():
+    return {'attempts': 0, 'succeeded': 0, 'blocked': 0, 'limited': 0}
+
+
+def record_kernel_operation(m, domain, op, outcome, context, reason=None):
+    if m is None or 'archive_integration' not in m:
+        return
+    runtime = m['archive_integration']['runtime_operations']
+    group = runtime['by_archive'].setdefault(domain, {
+        **operation_counter(), 'by_operation': {}, 'by_context': {}})
+    operation = group['by_operation'].setdefault(op, operation_counter())
+    context_count = group['by_context'].setdefault(context, operation_counter())
+    for counter in (runtime, group, operation, context_count):
+        counter['attempts'] += 1
+        counter[outcome] += 1
+    if reason:
+        runtime['reasons'][reason] = runtime['reasons'].get(reason, 0) + 1
+
+
+def archive_records(m, domain):
+    if domain == 'rational':
+        return m['expressions']
+    return m.get(domain + '_archive', {}).get('expressions', [])
+
+
+def exact_lookup_key(value):
+    sp = sympy_module()
+    if value.is_Rational:
+        return str(value)
+    real, imaginary = value.as_real_imag()
+    if real.is_Rational and imaginary.is_Rational:
+        return str(real + sp.I * imaginary)
+    return str(value)
+
+
+def record_lookup_key(m, domain, rec):
+    cache = m.setdefault('_canonical_keys', {})
+    ref = (domain, rec['id'])
+    if ref in cache:
+        return cache[ref]
+    sp = sympy_module()
+    if domain == 'roles':
+        return 'role:' + json.dumps([rec['kind'], rec['label'], rec['body']], sort_keys=True)
+    if domain == 'calculus':
+        value = calculus_value(rec['coefficients'])
+    elif domain == 'rational':
+        q = number(rec['value'])
+        value = sp.Rational(q.numerator, q.denominator)
+    elif domain == 'complex':
+        ar, ai = number(rec['real']), number(rec['imaginary'])
+        value = sp.Rational(ar.numerator, ar.denominator) + sp.I * sp.Rational(ai.numerator, ai.denominator)
+    else:
+        value = symbolic_value(m, rec['id'])
+    cache[ref] = exact_lookup_key(value)
+    return cache[ref]
+
+
+def archived_record_category(rec):
+    path = rec.get('pathway', '')
+    if path == ROLE_RULE:
+        return 'role_transition'
+    if path in ('polynomial_calculus_v47', 'zero_slot_calculus_v471'):
+        return 'calculus'
+    if path == 'foundation_state_count_v3':
+        return 'foundation'
+    if rec.get('operation') == 'seed':
+        return 'seed'
+    if path in ('numeric_to_symbolic_v46', 'numeric_to_symbolic_v464',
+                'symbolic_to_rational_v46', 'symbolic_to_complex_v46',
+                'calculus_to_rational_v47',
+                'rational_embedding_v44'):
+        return 'representation'
+    if 'nexus' in rec or path.startswith('zero_nexus_'):
+        return 'nexus'
+    return 'arithmetic'
+
+
+def sync_archive_records(m, domain):
+    state = m['archive_integration']
+    totals = state['archive_totals']
+    group = totals['by_archive'].setdefault(domain, {
+        'records': 0, 'by_category': {}, 'by_outer_operation': {}})
+    records = archive_records(m, domain)
+    cursor = state['indexed_record_cursors'][domain]
+    while cursor < len(records):
+        rec = records[cursor]
+        key = record_lookup_key(m, domain, rec)
+        rec['unified_value_key'] = key
+        bucket = m['unified_results'].setdefault(key, {'rational': [], 'complex': [], 'symbolic': []})
+        bucket.setdefault(domain, []).append(cursor)
+        category = archived_record_category(rec)
+        group['records'] += 1
+        totals['records'] += 1
+        group['by_category'][category] = group['by_category'].get(category, 0) + 1
+        totals['by_category'][category] = totals['by_category'].get(category, 0) + 1
+        if category in ('arithmetic', 'nexus'):
+            tree = rec.get('construction', rec.get('tree', {}))
+            op = rec.get('operation')
+            if op not in SYMBOLIC_BINARY_OPERATIONS + ('sqrt',):
+                op = tree.get('op')
+            if op is not None:
+                group['by_outer_operation'][op] = group['by_outer_operation'].get(op, 0) + 1
+                totals['by_outer_operation'][op] = totals['by_outer_operation'].get(op, 0) + 1
+        cursor += 1
+        state['indexed_record_cursors'][domain] = cursor
+
+
+def upgrade_archive_integration(m):
+    if 'archive_integration' not in m:
+        m['archive_integration'] = {
+            'schema': 1, 'indexed_record_cursors': {'rational': 0, 'complex': 0, 'symbolic': 0},
+            'archive_totals': {'records': 0, 'by_category': {}, 'by_outer_operation': {}, 'by_archive': {}},
+            'runtime_operations': {**operation_counter(), 'by_archive': {}, 'reasons': {},
+                'boundary': {'previous_runs': len(m['runs']),
+                             'historical_attempts_not_reconstructed': True}}}
+        m['unified_results'] = {}
+        journal(m, 'whole_engine_tracking_boundary', previous_runs=len(m['runs']))
+    m['network']['scope'] = 'legacy_rational_recorded_transitions'
+    for domain in ('rational', 'complex', 'symbolic'):
+        sync_archive_records(m, domain)
+
+
+def unified_query_value(text):
+    import re
+    words = text.strip().split(maxsplit=1)
+    if words and words[0].lower() == 'symbolic':
+        if len(words) != 2:
+            raise ValueError('Enter a value or expression after symbolic')
+        text = words[1]
+    compact = text.replace(' ', '')
+    # Preserve the existing a+bi query spelling, with the same safe parser.
+    compact = re.sub(r'(?<=[0-9)])i\b', '*i', compact)
+    return parse_symbolic_query(compact)
+
+
+def query_unified(m, text):
+    if 'archive_integration' not in m:
+        return False
+    try:
+        value = unified_query_value(text)
+        key = exact_lookup_key(value)
+    except (ValueError, SyntaxError, ZeroDivisionError, OverflowError) as exc:
+        if text.strip().lower().startswith('symbolic '):
+            print('Value query:', exc)
+            return True
+        return False
+    bucket = m['unified_results'].get(key, {'rational': [], 'complex': [], 'symbolic': []})
+    print('\nValue %s: %d archive records across all branches' %
+          (key, sum(len(ids) for ids in bucket.values())))
+    for domain in ZERO_CORE_DOMAINS:
+        ids = bucket.get(domain, [])
+        print('  %s: %d records' % (domain, len(ids)))
+        records = archive_records(m, domain)
+        for idx in ids[:20]:
+            rec = records[idx]
+            print('    %s:%d %s [%s; %s]' %
+                  (domain, idx, rec['expr'], rec['pathway'], archived_record_category(rec)))
+        if len(ids) > 20:
+            print('    ... %d more %s records' % (len(ids) - 20, domain))
+    if value.is_Rational:
+        qkey = encode(Fraction(int(value.p), int(value.q)))
+        proposals = [p for p in m['zero_proposals'] if p['result'] == qkey]
+        print('  Unapproved zero proposals:', len(proposals))
+        for proposal in proposals[:3]:
+            print('    PROPOSAL:', proposal['expression'])
+    print('Representation records are labelled; record counts are not counts of unique formulas.')
+    return True
+
+
+def print_operation_totals(m):
+    state = m['archive_integration']
+    archive = state['archive_totals']
+    runtime = state['runtime_operations']
+    print('\nWHOLE-ENGINE OPERATION TOTALS')
+    print('Runtime kernel calls since tracking boundary:', runtime['attempts'],
+          'computed:', runtime['succeeded'], 'blocked:', runtime['blocked'],
+          'resource-limited:', runtime['limited'])
+    for domain in dict.fromkeys((*ZERO_CORE_DOMAINS, *runtime['by_archive'])):
+        counts = runtime['by_archive'].get(domain, operation_counter())
+        print('  %s: %d calls; %d computed; %d blocked; %d limited' %
+              (domain, counts['attempts'], counts['succeeded'], counts['blocked'], counts['limited']))
+        print('    Calls by operation:', {op: values['attempts']
+              for op, values in counts.get('by_operation', {}).items()})
+    print('Accepted archive records, including historical records:', archive['records'])
+    print('Archive categories:', archive['by_category'])
+    print('Archived constructions by outer operation:', archive['by_outer_operation'])
+    print('Nexus records:', len(m['nexus_events']), 'rational;',
+          len(m.get('symbolic_nexus_events', [])), 'symbolic')
+    print('Past operation attempts are not inferred from stored results.')
+
+
+def archive_link_audit(m):
+    """Inspect saved references only. No evaluation, generation or writeback."""
+    archives = {'rational': m.get('expressions', []),
+                'complex': m.get('complex_archive', {}).get('expressions', []),
+                'symbolic': m.get('symbolic_archive', {}).get('expressions', []),
+                'calculus': m.get('calculus_archive', {}).get('expressions', []),
+                'roles': m.get('roles_archive', {}).get('expressions', [])}
+    nodes = {(domain, idx): rec for domain, records in archives.items()
+             for idx, rec in enumerate(records)}
+    dependencies = {node: set() for node in nodes}
+    roots = set()
+    issues, examples = 0, []
+
+    def issue(message):
+        nonlocal issues
+        issues += 1
+        if len(examples) < 20:
+            examples.append(message)
+
+    def reference(owner, domain, idx, context):
+        target = (domain, idx) if isinstance(domain, str) and type(idx) is int else None
+        if target not in nodes:
+            issue('%s: missing %s reference %s:%s' % (owner, context, domain, idx))
+            return
+        if owner in dependencies:
+            dependencies[owner].add(target)
+            if owner[0] == domain and idx >= owner[1]:
+                issue('%s: parent %s is not earlier in the same archive' % (owner, target))
+
+    foundation_ids = {rec.get('value'): idx for idx, rec in enumerate(archives['rational'])
+                      if rec.get('pathway') == 'foundation_state_count_v3'}
+    states = m.get('foundation', {}).get('states', [])
+    if states != list(range(len(states))):
+        issue('Foundation states are not the consecutive registered sequence')
+    for position, state in enumerate(states):
+        idx = foundation_ids.get(str(state))
+        if idx is None:
+            issue('Missing foundation expression for state %s' % state)
+            continue
+        node = ('rational', idx)
+        if state == 0:
+            roots.add(node)
+        else:
+            # These are dependencies of the declared state-count rule,
+            # not reconstructed timestamps or scheduler decisions.
+            for previous in states[:position]:
+                reference(node, 'rational', foundation_ids.get(str(previous)), 'state-count')
+
+    for node, rec in nodes.items():
+        domain, idx = node
+        if rec.get('id') != idx:
+            issue('%s: stored ID differs from archive position' % (node,))
+        for parent in rec.get('parents', []):
+            reference(node, domain, parent, 'parent')
+        for source in rec.get('sources', []):
+            reference(node, source.get('archive'), source.get('id'), 'source')
+        if (rec.get('operation') == 'seed' and not rec.get('parents')
+                and not rec.get('sources')):
+            roots.add(node)
+        if domain == 'complex' and rec.get('pathway') == 'rational_embedding_v44':
+            reference(node, 'rational', foundation_ids.get(rec.get('real')), 'foundation embedding')
+        if domain == 'symbolic':
+            nexus = rec.get('nexus', {})
+            for field in ('source_id', 'selected_value_id'):
+                if field in nexus:
+                    reference(node, 'symbolic', nexus[field], 'nexus ' + field)
+
+    indexes = {'rational': m.get('results', {}),
+               'complex': m.get('complex_archive', {}).get('results', {}),
+               'symbolic': m.get('symbolic_archive', {}).get('results', {}),
+               'calculus': m.get('calculus_archive', {}).get('results', {}),
+               'roles': m.get('roles_archive', {}).get('results', {})}
+    for domain, index in indexes.items():
+        for value, ids in index.items():
+            for idx in ids:
+                owner = '%s result index %s' % (domain, value)
+                reference(owner, domain, idx, 'result')
+                if type(idx) is int and (domain, idx) in nodes:
+                    if nodes[(domain, idx)].get('value') != value:
+                        issue('%s: record %s is indexed under a different value' % (owner, idx))
+    for (domain, idx), rec in nodes.items():
+        if idx not in indexes[domain].get(rec.get('value'), []):
+            issue('%s:%s: expression missing from its result index' % (domain, idx))
+        if 'unified_value_key' in rec:
+            bucket = m.get('unified_results', {}).get(rec['unified_value_key'], {})
+            if idx not in bucket.get(domain, []):
+                issue('%s:%s: expression missing from the unified result index' % (domain, idx))
+    for value, bucket in m.get('unified_results', {}).items():
+        for domain, ids in bucket.items():
+            for idx in ids:
+                reference('unified index %s' % value, domain, idx, 'result')
+                if type(idx) is int and (domain, idx) in nodes:
+                    if nodes[(domain, idx)].get('unified_value_key') != value:
+                        issue('Unified index %s points to a record with a different lookup key' % value)
+    imports = m.get('symbolic_archive', {}).get('source_import_links', {})
+    import_kinds = m.get('symbolic_archive', {}).get('source_import_kinds', {})
+    for domain, links in imports.items():
+        for source_id, symbolic_id in links.items():
+            try:
+                source_number = int(source_id)
+            except (ValueError, TypeError):
+                issue('Import link has an invalid source ID %s:%s' % (domain, source_id))
+                continue
+            reference('import link %s:%s' % (domain, source_id), domain, source_number, 'source')
+            reference('import link %s:%s' % (domain, source_id), 'symbolic', symbolic_id, 'symbolic target')
+            if ((domain, source_number) in nodes and type(symbolic_id) is int
+                    and ('symbolic', symbolic_id) in nodes):
+                original = nodes[(domain, source_number)]
+                target = nodes[('symbolic', symbolic_id)]
+                if import_kinds.get(domain, {}).get(source_id) == 'representation_link':
+                    if {'archive': 'symbolic', 'id': symbolic_id} not in original.get('sources', []):
+                        issue('Import representation link %s:%s has a different symbolic origin' % (domain, source_id))
+                elif {'archive': domain, 'id': source_number} not in target.get('sources', []):
+                    issue('Construction import %s:%s points to another source construction' % (domain, source_id))
+
+    zeros = m.get('foundation', {}).get('zero_records', [])
+    zero_ids = {record.get('id') for record in zeros}
+    if [record.get('id') for record in zeros] != ['Z%d' % i for i in range(len(states))]:
+        issue('Zero-record IDs do not match the registered foundation states')
+    for idx, proposal in enumerate(m.get('observer', {}).get('proposals', [])):
+        reference('observer proposal %d' % idx, 'rational', proposal.get('source_id'), 'source')
+    blocked = m.get('blocked', [])
+    for idx, record in enumerate(blocked):
+        if record.get('id') != idx:
+            issue('Blocked record %d has a mismatched ID' % idx)
+        for field in ('left', 'right'):
+            reference('blocked record %d' % idx, 'rational', record.get(field), field)
+    for idx, proposal in enumerate(m.get('zero_proposals', [])):
+        blocked_id = proposal.get('blocked_id')
+        if type(blocked_id) is not int or not 0 <= blocked_id < len(blocked):
+            issue('Zero proposal %d has a missing blocked-operation ID' % idx)
+        if proposal.get('zero_record') not in zero_ids:
+            issue('Zero proposal %d has a missing zero-record reference' % idx)
+    legacy_positional_observations = 0
+    for domain, events, fields in (
+            ('rational', m.get('nexus_events', []), ('source_id', 'registered_value_id', 'result_id')),
+            ('symbolic', m.get('symbolic_nexus_events', []),
+             ('source_id', 'selected_value_id', 'symbolic_result_id'))):
+        for idx, event in enumerate(events):
+            # V4.2 recorded positional observations without creating an
+            # expression. A null result ID is intentional only for this
+            # explicitly identified historical event format. Preserve it;
+            # never invent a result link from numerical equality.
+            legacy_observation = (
+                domain == 'rational'
+                and event.get('rule') == 'zero_nexus_position_operation_v42'
+                and event.get('slot_kind') == 'reference_position_operation'
+                and event.get('status') == 'positional_operation_observation'
+                and 'result_id' in event and event['result_id'] is None)
+            if legacy_observation:
+                legacy_positional_observations += 1
+                source = event.get('source')
+                position = event.get('source_position')
+                selected = event.get('selected_value')
+                if (source != m.get('reference', {}).get('input')
+                        or not isinstance(source, str)
+                        or type(position) is not int
+                        or not 1 <= position <= len(source)
+                        or source[position - 1] != '0'
+                        or type(selected) is not int or not 0 <= selected <= 9
+                        or event.get('operation') not in OPERATIONS
+                        or not isinstance(event.get('local_result'), str)
+                        or event.get('transformed') != (
+                            source[:position - 1] + str(selected) + source[position:])):
+                    issue('rational nexus event %d: malformed legacy positional observation' % idx)
+            for field in fields:
+                if field in event:
+                    if legacy_observation and field == 'result_id':
+                        continue
+                    reference('%s nexus event %d' % (domain, idx), domain, event[field], field)
+            if event.get('zero_nexus') not in zero_ids:
+                issue('%s nexus event %d has a missing zero-record reference' % (domain, idx))
+
+    children = {node: set() for node in nodes}
+    for node, parents in dependencies.items():
+        for parent in parents:
+            children[parent].add(node)
+
+    def reachable(start):
+        seen = set(start)
+        pending = deque(start)
+        while pending:
+            for child in children[pending.popleft()]:
+                if child not in seen:
+                    seen.add(child)
+                    pending.append(child)
+        return seen
+
+    indegrees = {node: len(parents) for node, parents in dependencies.items()}
+    ready = deque(node for node, degree in indegrees.items() if degree == 0)
+    ordered = 0
+    while ready:
+        node = ready.popleft()
+        ordered += 1
+        for child in children[node]:
+            indegrees[child] -= 1
+            if indegrees[child] == 0:
+                ready.append(child)
+    unresolved = len(nodes) - ordered
+    if unresolved:
+        issue('%d records are in or depend on a reference cycle' % unresolved)
+    zero_id = foundation_ids.get('0')
+    from_zero = reachable([('rational', zero_id)]) if zero_id is not None else set()
+    from_roots = reachable(roots)
+    unexplained = set(nodes) - from_roots
+    if unexplained:
+        issue('%d records have no path from zero or a declared seed' % len(unexplained))
+
+    # Queue cursors are not generally expression IDs. Check only typed record
+    # fields here, then check cursor ranges according to each worker's format.
+    task_refs = {
+        'frontier': ('rational', ('left', 'right')),
+        'pair': ('rational', ('left', 'right')),
+        'nexus': ('rational', ('source', 'value')),
+        'revisit': ('rational', ('new',)),
+        'consume': ('rational', ()),
+        'consume_op': ('rational', ('left', 'right')),
+        'zero_scan': ('rational', ('value',)),
+        'zero_source': ('rational', ('source',)),
+        'complex': ('complex', ('left', 'right')),
+        'complex_feedback': ('complex', ('source',)),
+        'symbolic_root': ('symbolic', ('source',)),
+        'symbolic_pair': ('symbolic', ('source',)),
+        'symbolic_nexus': ('symbolic', ('source',))}
+    queue = m.get('queue', [])
+    head = m.get('queue_head', 0)
+    if type(head) is not int or not 0 <= head <= len(queue):
+        issue('Queue head is outside the saved queue')
+        head = 0
+    known_kinds = set(task_refs) | {'emerge', 'position', 'symbolic_position'}
+    for offset, task in enumerate(queue[head:], head):
+        owner = 'queue[%d]' % offset
+        kind = task.get('kind')
+        if kind not in known_kinds:
+            issue('%s: unknown task kind %s' % (owner, kind))
+            continue
+        if kind in task_refs:
+            domain, fields = task_refs[kind]
+            for field in fields:
+                reference(owner, domain, task.get(field), field)
+        if kind in ('consume', 'consume_op'):
+            for field in ('items', 'remaining', 'path'):
+                for idx in task.get(field, []):
+                    reference(owner, 'rational', idx, field)
+        if 'op_cursor' in task and (type(task['op_cursor']) is not int or
+                                    not 0 <= task['op_cursor'] <= 2 * len(OPERATIONS)):
+            issue('%s: invalid arithmetic resume cursor' % owner)
+        if 'zero_cursor' in task and (type(task['zero_cursor']) is not int or task['zero_cursor'] < 0):
+            issue('%s: invalid zero-slot resume cursor' % owner)
+        if kind in ('zero_scan', 'zero_source'):
+            limit = len(archives['rational']) if kind == 'zero_scan' else len(states)
+            cursor, stop = task.get('cursor'), task.get('stop')
+            if (type(cursor) is not int or type(stop) is not int
+                    or not 0 <= cursor <= stop <= limit):
+                issue('%s: invalid saved scan cursor/snapshot' % owner)
+        if kind in ('complex_feedback', 'symbolic_pair', 'symbolic_nexus'):
+            source, cursor = task.get('source'), task.get('cursor')
+            if type(source) is not int or type(cursor) is not int or not 0 <= cursor <= source:
+                issue('%s: invalid feedback cursor' % owner)
+        if kind == 'symbolic_pair' and (type(task.get('step')) is not int or not 0 <= task['step'] < 10):
+            issue('%s: invalid symbolic operation step' % owner)
+        if kind == 'symbolic_nexus' and (task.get('direction') not in (0, 1)
+                or type(task.get('slot')) is not int or task['slot'] < 0):
+            issue('%s: invalid symbolic zero-slot cursor' % owner)
+
+    ca = m.get('calculus_archive', {})
+    cqueue, chead = ca.get('queue', []), ca.get('head', 0)
+    if type(chead) is not int or not 0 <= chead <= len(cqueue):
+        issue('Invalid calculus queue head')
+        chead = 0
+    for task in cqueue[chead:] + ca.get('deferred', []):
+        reference('calculus pending task', 'calculus', task.get('source'), 'source')
+        if task.get('operation') not in CALCULUS_OPERATIONS:
+            issue('Invalid calculus operation in pending task')
+    if not 0 <= ca.get('import_cursor', 0) <= len(archives['rational']):
+        issue('Invalid calculus import cursor')
+
+    ra = m.get('roles_archive', {})
+    role_records = ra.get('expressions', [])
+    rqueue, rhead = ra.get('queue', []), ra.get('head', 0)
+    if type(rhead) is not int or not 0 <= rhead <= len(rqueue):
+        issue('Invalid roles queue head')
+        rhead = 0
+    for task in rqueue[rhead:] + ra.get('deferred', []):
+        reference('roles pending task', 'roles', task.get('source'), 'source')
+        if type(task.get('cursor')) is not int or task['cursor'] < 0:
+            issue('Invalid role target cursor')
+    expected_variables = [rec['id'] for rec in role_records if rec.get('kind') == 'variable']
+    if ra.get('variable_refs', []) != expected_variables:
+        issue('Roles variable index differs from variable constructions')
+    for idx, rec in enumerate(role_records):
+        if idx == 0:
+            expected_source = {'archive': 'rational', 'id': foundation_ids.get('0')}
+            if (rec.get('rule') != 'reference_foundation_zero' or
+                    rec.get('parents') != [] or rec.get('sources') != [expected_source] or
+                    rec.get('path') != ['0'] or rec.get('depth') != 0 or
+                    rec.get('body') != {'kind': 'numeric', 'value': '0'}):
+                issue('Invalid roles origin')
+            continue
+        parents = rec.get('parents', [])
+        if len(parents) != 1 or type(parents[0]) is not int or not 0 <= parents[0] < idx:
+            issue('roles:%d: invalid transformation parent' % idx)
+            continue
+        parent = role_records[parents[0]]
+        slot = rec.get('slot', {})
+        counter = parent['depth']
+        counter_id = foundation_ids.get(str(counter))
+        if (slot != {'counter': counter, 'foundation_id': counter_id} or
+                counter_id is None or rec.get('depth') != counter + 1 or
+                {'archive': 'rational', 'id': counter_id} not in rec.get('sources', [])):
+            issue('roles:%d: missing emergent counter slot backing' % idx)
+        if rec.get('path') != parent['path'] + [rec.get('label')]:
+            issue('roles:%d: incorrect construction path' % idx)
+        if rec.get('rule') == 'assign_name_preserve_payload':
+            if rec.get('label') not in ('A', 'a') or rec.get('body') != parent['body'] or rec.get('kind') != 'named':
+                issue('roles:%d: invalid name assignment' % idx)
+        elif rec.get('rule') == 'introduce_free_variable':
+            if rec.get('label') != 'x' or rec.get('body') != {'kind': 'variable', 'symbol': 'x'} or rec.get('kind') != 'variable':
+                issue('roles:%d: invalid variable introduction' % idx)
+        elif rec.get('rule') == 'select_registered_numeric_state':
+            label = rec.get('label')
+            numeric_id = foundation_ids.get(label)
+            if (numeric_id is None or rec.get('kind') != 'numeric' or
+                    rec.get('body') != {'kind': 'numeric', 'value': label} or
+                    {'archive': 'rational', 'id': numeric_id} not in rec.get('sources', [])):
+                issue('roles:%d: invalid registered state selection' % idx)
+        else:
+            issue('roles:%d: unknown transformation rule' % idx)
+        try:
+            if rec.get('value') != role_value(rec['kind'], rec['label'], rec['body']):
+                issue('roles:%d: role value differs from its payload' % idx)
+        except (KeyError, ValueError, TypeError):
+            issue('roles:%d: invalid payload encoding' % idx)
+    legacy_boundary = ca.get('role_origin_boundary', len(archives['calculus']))
+    if type(legacy_boundary) is not int or not 0 <= legacy_boundary <= len(archives['calculus']):
+        issue('Invalid calculus variable-origin migration boundary')
+        legacy_boundary = 0
+    for idx, rec in enumerate(archives['calculus']):
+        if idx < legacy_boundary or rec.get('operation') == 'constant_import':
+            continue
+        binding = rec.get('variable_source', {})
+        ref_id = binding.get('id')
+        if binding not in rec.get('sources', []) or binding.get('archive') != 'roles':
+            issue('calculus:%d: missing typed variable origin' % idx)
+        elif type(ref_id) is not int or not 0 <= ref_id < len(role_records):
+            issue('calculus:%d: missing variable construction' % idx)
+        elif role_records[ref_id].get('kind') != 'variable':
+            issue('calculus:%d: incompatible variable role' % idx)
+    for task in cqueue[chead:] + ca.get('deferred', []):
+        cursor = task.get('variable_cursor', 0)
+        if type(cursor) is not int or not 0 <= cursor <= len(ra.get('variable_refs', [])):
+            issue('Invalid calculus variable-path cursor')
+
+    return {'issues': issues, 'examples': examples,
+            'legacy_positional_observations': legacy_positional_observations,
+            'records': {domain: len(records) for domain, records in archives.items()},
+            'dependency_links': sum(len(parents) for parents in dependencies.values()),
+            'declared_roots': sorted(roots), 'from_zero': len(from_zero),
+            'from_all_declared_roots': len(from_roots),
+            'unexplained_records': len(unexplained), 'cycle_or_dependent_records': unresolved,
+            'pending_tasks': len(queue) - head}
+
+
+def print_archive_link_audit(m):
+    report = archive_link_audit(m)
+    print('\nARCHIVE LINK AUDIT - READ ONLY; NO MATHEMATICAL EVALUATION')
+    print('Records by archive:', report['records'])
+    print('Typed dependency links:', report['dependency_links'])
+    print('Declared roots:', report['declared_roots'])
+    print('Records with a provenance path from zero:', report['from_zero'])
+    print('Records reachable including declared seeds:', report['from_all_declared_roots'])
+    print('Pending tasks inspected:', report['pending_tasks'])
+    print('Legacy positional observations (no expression created):',
+          report['legacy_positional_observations'])
+    print('Structural issues:', report['issues'])
+    for example in report['examples']:
+        print('  ', example)
+    print('Checks saved links and dependency order; does not enumerate all possible mathematical paths.')
+
+
+ROLE_WORK_PER_RUN = 12
+ROLE_MAX_DEPTH = 4
+ROLE_RULE = 'zero_slot_role_transform_v471'
+
+
+def role_body_text(body):
+    if body['kind'] == 'numeric':
+        return body['value']
+    if body['kind'] == 'variable' and body['symbol'] == 'x':
+        return 'x'
+    raise ValueError('Unsupported role payload')
+
+
+def role_value(kind, label, body):
+    text = role_body_text(body)
+    return label + '[' + text + ']' if kind == 'named' else text
+
+
+def role_variable(m, idx):
+    records = m.get('roles_archive', {}).get('expressions', [])
+    if type(idx) is not int or not 0 <= idx < len(records):
+        raise ValueError('Calculus requires an archived zero-origin variable')
+    rec = records[idx]
+    if rec['kind'] != 'variable' or rec['body'] != {'kind': 'variable', 'symbol': 'x'}:
+        raise ValueError('Calculus variable source must be a variable-role construction')
+    return rec['body']['symbol']
+
+
+def _role_transition_exact(m, source_id, target):
+    """Explicit representation rules, not arithmetic equalities or physical laws.
+
+    Naming preserves the payload. Abstraction introduces a free variable and
+    retains the previous construction as its parent, without equating its value
+    to x. Selection references a state already produced by the foundation.
+    Each step occupies a slot backed by its registered foundation counter.
+    """
+    records = m['roles_archive']['expressions']
+    if type(source_id) is not int or not 0 <= source_id < len(records):
+        raise ValueError('Invalid role source')
+    source = records[source_id]
+    slot = source['depth']
+    states = m['foundation']['states']
+    if slot >= ROLE_MAX_DEPTH:
+        return None, 'role_depth_limit'
+    if slot >= len(states):
+        return None, 'waiting_for_emergent_slot'
+    counter_id = foundation_expression_id(m, states[slot])
+    if counter_id is None:
+        raise ValueError('Emergent slot has no foundation construction')
+    sources = [{'archive': 'rational', 'id': counter_id}]
+    if target in ('A', 'a'):
+        kind, label, body = 'named', target, dict(source['body'])
+        rule = 'assign_name_preserve_payload'
+    elif target == 'x':
+        kind, label, body = 'variable', 'x', {'kind': 'variable', 'symbol': 'x'}
+        rule = 'introduce_free_variable'
+    elif type(target) is int and target in states:
+        numeric_id = foundation_expression_id(m, target)
+        if numeric_id is None:
+            raise ValueError('Selected state has no foundation construction')
+        ref = {'archive': 'rational', 'id': numeric_id}
+        if ref not in sources:
+            sources.append(ref)
+        kind, label, body = 'numeric', str(target), {'kind': 'numeric', 'value': str(target)}
+        rule = 'select_registered_numeric_state'
+    else:
+        raise ValueError('Unsupported role target')
+    return {'kind': kind, 'label': label, 'body': body,
+            'value': role_value(kind, label, body), 'rule': rule,
+            'parents': [source_id], 'sources': sources,
+            'path': source['path'] + [label], 'depth': slot + 1,
+            'slot': {'counter': slot, 'foundation_id': counter_id}}, None
+
+
+def role_record(m, result, operation):
+    ra = m['roles_archive']
+    rec = dict(result)
+    rec.update(id=len(ra['expressions']), expr=' -> '.join(result['path']),
+               operation=operation, pathway=ROLE_RULE, formal_rule=ROLE_RULE)
+    # Construction identity includes the parent and target; equal endpoints
+    # never merge distinct paths. No task silently truncates a path.
+    key = json.dumps([rec['parents'], rec['rule'], rec['label'], rec['sources']],
+                     sort_keys=True, separators=(',', ':'))
+    if key in ra['known_keys']:
+        return None
+    zero_core(m, 'roles', record=rec)
+    ra['known_keys'].append(key)
+    ra['expressions'].append(rec)
+    ra['results'].setdefault(rec['value'], []).append(rec['id'])
+    if rec['kind'] == 'variable':
+        ra['variable_refs'].append(rec['id'])
+    ra['queue'].append({'source': rec['id'], 'cursor': 0})
+    if 'archive_integration' in m:
+        sync_archive_records(m, 'roles')
+    journal(m, 'zero_slot_role_transition', role_id=rec['id'],
+            parents=rec['parents'], rule=rec['rule'], slot=rec.get('slot'))
+    return rec['id']
+
+
+def upgrade_roles(m):
+    ra = m.setdefault('roles_archive', {
+        'schema': 1, 'expressions': [], 'results': {}, 'known_keys': [],
+        'variable_refs': [], 'queue': [], 'head': 0, 'deferred': [],
+        'limits': [ROLE_MAX_DEPTH, len(m['foundation']['states'])]})
+    limits = [ROLE_MAX_DEPTH, len(m['foundation']['states'])]
+    if ra['limits'] != limits:
+        ra['queue'].extend(ra['deferred'])
+        ra['deferred'] = []
+        ra['limits'] = limits
+    m['rule_registry'].setdefault(ROLE_RULE, {
+        'status': 'explicit_executable_representation_rules',
+        'origin': 'archived foundation zero',
+        'slot': 'transition k requires registered counter k and its foundation record',
+        'targets': ['named A', 'named a', 'free variable x', 'registered numeric states'],
+        'rules': ['assign_name_preserve_payload', 'introduce_free_variable',
+                  'select_registered_numeric_state'],
+        'semantics': 'representation transitions; not numerical equalities',
+        'coverage': 'FIFO enumeration of this grammar; bounded depth; no all-mathematics claim'})
+    if 'archive_integration' in m:
+        m['archive_integration']['indexed_record_cursors'].setdefault('roles', 0)
+        sync_archive_records(m, 'roles')
+    if not ra['expressions']:
+        zero_id = foundation_expression_id(m, 0)
+        if zero_id is None:
+            raise ValueError('Role exploration requires the archived foundation zero')
+        role_record(m, {'kind': 'numeric', 'label': '0',
+            'body': {'kind': 'numeric', 'value': '0'}, 'value': '0',
+            'parents': [], 'sources': [{'archive': 'rational', 'id': zero_id}],
+            'path': ['0'], 'depth': 0, 'rule': 'reference_foundation_zero'}, 'origin')
+
+
+def work_roles(m):
+    upgrade_roles(m)
+    ra = m['roles_archive']
+    before = len(ra['expressions'])
+    for _ in range(ROLE_WORK_PER_RUN):
+        if ra['head'] >= len(ra['queue']):
+            break
+        task = ra['queue'][ra['head']]
+        source = ra['expressions'][task['source']]
+        if source['depth'] >= min(ROLE_MAX_DEPTH, len(m['foundation']['states'])):
+            ra['deferred'].append(dict(task))
+        else:
+            cursor = task['cursor']
+            # Keep the cursor monotonic: future foundation states extend this
+            # enumeration without replaying old choices or losing old parents.
+            if cursor < 3 + len(m['foundation']['states']):
+                target = ('A', 'a', 'x')[cursor] if cursor < 3 else cursor - 3
+                result, reason = zero_core(m, 'roles', operation='transform',
+                                          operands=(task['source'], target))
+                record_kernel_operation(m, 'roles', 'transform',
+                                        'limited' if reason else 'succeeded', ROLE_RULE, reason)
+                if reason:
+                    ra['deferred'].append(dict(task))
+                else:
+                    role_record(m, result, 'transform')
+                    ra['queue'].append({'source': task['source'], 'cursor': cursor + 1})
+            else:
+                # Waiting for additional registered states is pending work.
+                ra['queue'].append(dict(task))
+        ra['head'] += 1
+    if ra['head'] > 2000:
+        ra['queue'] = ra['queue'][ra['head']:]
+        ra['head'] = 0
+    return {'new': len(ra['expressions']) - before,
+            'variable_paths': len(ra['variable_refs']),
+            'pending': len(ra['queue']) - ra['head'], 'deferred': len(ra['deferred'])}
+
+
+def query_roles(m, text):
+    words = text.strip().split()
+    if not words or words[0].lower() not in ('roles', 'roles-index'):
+        return False
+    ra = m.get('roles_archive', {'expressions': []})
+    if len(words) == 2 and words[1].isdigit():
+        idx = int(words[1])
+        if idx < len(ra['expressions']):
+            print(json.dumps(ra['expressions'][idx], indent=2))
+        else:
+            print('No role construction with that ID.')
+    else:
+        print('Executable zero-slot role constructions (representation transitions):')
+        for rec in ra['expressions'][-30:]:
+            print('  roles:%d %s [%s; value=%s; slot=%s]' %
+                  (rec['id'], rec['expr'], rec['rule'], rec['value'], rec.get('slot')))
+        print('Use roles 7 (replace 7 with a record number) to inspect ancestry.')
+    return True
+
+
+CALCULUS_WORK_PER_RUN = 8
+CALCULUS_IMPORT_PER_RUN = 2
+CALCULUS_MAX_DEPTH = 4
+CALCULUS_MAX_DEGREE = 8
+CALCULUS_OPERATIONS = ('differentiate', 'integrate', 'limit_zero', 'multiply_x')
+
+
+def calculus_coefficients(values):
+    """Ascending exact rational coefficients, with a unique zero encoding."""
+    values = [number(v) for v in values]
+    while len(values) > 1 and values[-1] == 0:
+        values.pop()
+    return [encode(v) for v in values] or ['0']
+
+
+def calculus_value(coefficients, variable='x'):
+    sp = sympy_module()
+    x = sp.Symbol(variable, real=True)
+    return sp.Add(*(sp.Rational(number(c).numerator, number(c).denominator) * x**i
+                    for i, c in enumerate(coefficients)))
+
+
+def _calculus_apply_exact(operation, coefficients):
+    """Termwise polynomial rules; no substitution of x=0 for singular functions."""
+    a = [number(v) for v in calculus_coefficients(coefficients)]
+    if operation == 'differentiate':
+        result = [i * a[i] for i in range(1, len(a))] or [Fraction(0)]
+    elif operation == 'integrate':
+        result = [Fraction(0)] + [c / (i + 1) for i, c in enumerate(a)]
+    elif operation == 'limit_zero':
+        result = [a[0]]  # Polynomials are continuous at zero.
+    elif operation == 'multiply_x':
+        result = [Fraction(0)] + a
+    else:
+        raise ValueError('Unsupported calculus operation')
+    encoded = calculus_coefficients(result)
+    if len(encoded) - 1 > CALCULUS_MAX_DEGREE:
+        return None, 'calculus_degree_limit'
+    if any(max(v.numerator.bit_length(), v.denominator.bit_length()) > MAX_BITS
+           for v in result):
+        return None, 'calculus_coefficient_limit'
+    return encoded, None
+
+
+def upgrade_calculus(m):
+    ca = m.setdefault('calculus_archive', {
+        'schema': 1, 'expressions': [], 'results': {}, 'known_keys': [],
+        'import_cursor': 0, 'queue': [], 'head': 0, 'deferred': [],
+        'limits': [CALCULUS_MAX_DEPTH, CALCULUS_MAX_DEGREE, MAX_BITS]})
+    ca.setdefault('role_origin_boundary', len(ca['expressions']))
+    m['rule_registry'].setdefault('zero_slot_calculus_v471', {
+        'status': 'active_polynomial_exploration_with_zero_origin_variable',
+        'variable': 'requires an executed zero-slot variable-role construction',
+        'history': 'previous calculus records preserved without retroactive origin claims',
+        'input': 'coefficients re-expressed in the selected archived variable role',
+        'scope': 'rational polynomial derivatives, primitives, multiplication by x, limits at zero'})
+    limits = [CALCULUS_MAX_DEPTH, CALCULUS_MAX_DEGREE, MAX_BITS]
+    if ca['limits'] != limits:
+        ca['queue'].extend(ca['deferred'])
+        ca['deferred'] = []
+        ca['limits'] = limits
+    state = zero_core_state(m)
+    for field in ('record_passages', 'historical_record_passages'):
+        state[field].setdefault('calculus', 0)
+    for rec in ca['expressions']:
+        zero_core(m, 'calculus', record=rec, historical=True)
+    m['rule_registry'].setdefault('polynomial_calculus_v47', {
+        'status': 'explicit_formal_extension_not_foundation',
+        'variable': 'x is a formal real variable, not an emerged number',
+        'coefficients': 'imported archived rationals with typed source links',
+        'operations': list(CALCULUS_OPERATIONS),
+        'antiderivative': 'canonical representative with C=0; family P(x)+C',
+        'limit': 'two-sided at zero, for polynomials only',
+        'coverage': 'bounded exploration; no completeness claim'})
+    if 'archive_integration' in m:
+        m['archive_integration']['indexed_record_cursors'].setdefault('calculus', 0)
+        sync_archive_records(m, 'calculus')
+
+
+def calculus_record(m, coefficients, operation, parents=(), sources=(), depth=0):
+    ca = m['calculus_archive']
+    coefficients = calculus_coefficients(coefficients)
+    variable_refs = [ref for ref in sources if ref['archive'] == 'roles']
+    if operation != 'constant_import':
+        if len(variable_refs) != 1 or len(parents) != 1:
+            raise ValueError('New calculus constructions require a parent and one zero-origin variable')
+        variable = role_variable(m, variable_refs[0]['id'])
+    else:
+        if len(coefficients) != 1:
+            raise ValueError('A constant import cannot introduce a formal variable')
+        variable = 'x'  # Not present in a constant polynomial.
+    identity = json.dumps([operation, list(parents), list(sources), coefficients],
+                          sort_keys=True, separators=(',', ':'))
+    if identity in ca['known_keys']:
+        return None
+    rec = {'id': len(ca['expressions']), 'expr': str(calculus_value(coefficients, variable)),
+           'value': str(calculus_value(coefficients, variable)), 'coefficients': coefficients,
+           'operation': operation, 'parents': list(parents), 'sources': list(sources),
+           'depth': depth,
+           'pathway': 'polynomial_calculus_v47' if operation == 'constant_import' else 'zero_slot_calculus_v471',
+           'formal_rule': 'polynomial_calculus_v47' if operation == 'constant_import' else 'zero_slot_calculus_v471'}
+    if variable_refs:
+        rec['variable_source'] = dict(variable_refs[0])
+        rec['variable'] = variable
+        rec['input_interpretation'] = 'polynomial coefficients expressed in this archived variable role'
+    if operation == 'integrate':
+        rec['integration_constant'] = 'C=0 representative; full family is result+C'
+    if operation == 'limit_zero':
+        rec['limit'] = {'point': '0', 'direction': 'two-sided',
+                        'justification': 'polynomial continuity'}
+    if parents:
+        original = ca['expressions'][parents[0]]['coefficients']
+        rec['proof'] = {'rule': operation, 'input_coefficients': original,
+                        'output_coefficients': coefficients,
+                        'formula': {'differentiate': 'a[k] -> k*a[k] at degree k-1',
+                                    'integrate': 'a[k] -> a[k]/(k+1) at degree k+1',
+                                    'limit_zero': 'sum a[k]*x^k -> a[0] as x -> 0',
+                                    'multiply_x': 'a[k] -> a[k] at degree k+1'}[operation]}
+    zero_core(m, 'calculus', record=rec)
+    ca['known_keys'].append(identity)
+    ca['expressions'].append(rec)
+    ca['results'].setdefault(rec['value'], []).append(rec['id'])
+    for op in CALCULUS_OPERATIONS:
+        ca['queue'].append({'source': rec['id'], 'operation': op})
+    if 'archive_integration' in m:
+        sync_archive_records(m, 'calculus')
+    # A constant calculus result is available to existing numerical workers.
+    if len(coefficients) == 1 and coefficients[0] not in m['results']:
+        q = number(coefficients[0])
+        leaf = int(q) if q.denominator == 1 else encode(q)
+        idx = add_expression(m, {
+            'expr': encode(q), 'value': encode(q), 'tree': {'leaf': leaf},
+            'depth': 0, 'parents': [], 'leaves': [leaf], 'domain': 'rational',
+            'pathway': 'calculus_to_rational_v47',
+            'sources': [{'archive': 'calculus', 'id': rec['id']}],
+            'ancestry': [{'rule': 'exact_constant_polynomial_embedding'}]})
+        if idx is not None:
+            schedule_frontier(m, idx)
+    journal(m, 'calculus_expression', calculus_id=rec['id'], operation=operation)
+    return rec['id']
+
+
+def work_calculus(m):
+    """Persist each operation/variable-path combination without value merging."""
+    upgrade_roles(m)
+    upgrade_calculus(m)
+    ca = m['calculus_archive']
+    variable_paths = m['roles_archive']['variable_refs']
+    before = len(ca['expressions'])
+    stop = min(len(m['expressions']), ca['import_cursor'] + CALCULUS_IMPORT_PER_RUN)
+    while ca['import_cursor'] < stop:
+        idx = ca['import_cursor']
+        calculus_record(m, [m['expressions'][idx]['value']], 'constant_import',
+                        sources=[{'archive': 'rational', 'id': idx}])
+        ca['import_cursor'] += 1
+    processed = 0
+    while processed < CALCULUS_WORK_PER_RUN and ca['head'] < len(ca['queue']):
+        task = ca['queue'][ca['head']]
+        source = ca['expressions'][task['source']]
+        cursor = task.get('variable_cursor', 0)
+        if source['depth'] >= CALCULUS_MAX_DEPTH:
+            ca['deferred'].append(dict(task))
+        elif cursor >= len(variable_paths):
+            # Retain the task: future role constructions give new paths.
+            ca['queue'].append(dict(task))
+        else:
+            variable_id = variable_paths[cursor]
+            result, reason = zero_core(m, 'calculus', operation=task['operation'],
+                                      operands=(source['coefficients'], variable_id))
+            record_kernel_operation(m, 'calculus', task['operation'],
+                                    'limited' if reason else 'succeeded',
+                                    'zero_slot_calculus_v471', reason)
+            if reason:
+                ca['deferred'].append(dict(task))
+            else:
+                calculus_record(m, result, task['operation'], parents=[source['id']],
+                                sources=[{'archive': 'roles', 'id': variable_id}],
+                                depth=source['depth'] + 1)
+                ca['queue'].append({**task, 'variable_cursor': cursor + 1})
+        ca['head'] += 1
+        processed += 1
+    if ca['head'] > 2000:
+        ca['queue'] = ca['queue'][ca['head']:]
+        ca['head'] = 0
+    legacy = sum(rec['operation'] != 'constant_import' and 'variable_source' not in rec
+                 for rec in ca['expressions'][:ca['role_origin_boundary']])
+    return {'new': len(ca['expressions']) - before, 'processed': processed,
+            'pending': len(ca['queue']) - ca['head'], 'deferred': len(ca['deferred']),
+            'legacy_operations_without_variable_origin': legacy}
+
+
+def query_calculus(m, text):
+    words = text.lower().split()
+    if not words or words[0] not in ('calculus', 'calculus-index'):
+        return False
+    ca = m.get('calculus_archive', {'expressions': [], 'results': {}})
+    if words[0] == 'calculus' and len(words) == 2 and words[1].isdigit():
+        idx = int(words[1])
+        if idx < len(ca['expressions']):
+            print(json.dumps(ca['expressions'][idx], indent=2))
+        else:
+            print('No calculus record with that ID.')
+    else:
+        print('Polynomial calculus: formal real x; exact rational coefficients.')
+        print('Antiderivatives show C=0 representatives; full families include +C.')
+        print('Limits are two-sided at zero for polynomials only.')
+        for rec in ca['expressions'][-30:]:
+            print('  calculus:%d %s [%s; parents=%s; sources=%s]' %
+                  (rec['id'], rec['value'], rec['operation'], rec['parents'], rec['sources']))
+        print('Use calculus 7 (replace 7 with a record number) to inspect construction and proof.')
+    return True
+
+
+
+def run():
+    try:
+        sp = sympy_module()
+    except RuntimeError as exc:
+        print(exc)
+        return
+    m = load_memory()
+    # Preserve the exact pre-upgrade bytes once, before any exploration.
+    if os.path.exists(memory_path()):
+        import shutil
+        backup = memory_path() + '.pre-v471.bak'
+        try:
+            with open(backup, 'xb') as target, open(memory_path(), 'rb') as source:
+                shutil.copyfileobj(source, target)
+        except FileExistsError:
+            pass
+    f = m['foundation']
+    assert f['states'] == list(range(len(f['states'])))
+    assert [z['id'] for z in f['zero_records']] == ['Z%d' % i for i in range(len(f['states']))]
+    assert digit_breakdown('00404') == '00111101111'
+    assert number('1/2') + number('1/3') == Fraction(5, 6)
+    upgrade_zero_core(m)
+    m['_keys'] = set(m['known_expression_keys'])
+    upgrade_runtime(m)
+    upgrade_v44(m)
+    upgrade_tracking_namespaces(m)
+    upgrade_v45(m)
+    upgrade_complex_feedback(m)
+    upgrade_symbolic(m)
+    upgrade_symbolic_zero_nexus(m)
+    upgrade_zero_archive_access(m)
+    upgrade_archive_integration(m)
+    upgrade_calculus(m)
+    upgrade_roles(m)
+    m['_blocked_keys'] = {(b['left'], b['right'], b['operation'], b['pathway'])
+                          for b in m['blocked']}
+    stats = {'new': 0, 'observer_added': 0,
+             'symbolic_new': 0, 'paused_tasks': 0,
+             'processed': {'consume': 0, 'consume_op': 0, 'pair': 0, 'revisit': 0, 'nexus': 0, 'zero_scan': 0, 'zero_source': 0, 'emerge': 0, 'frontier': 0, 'position': 0, 'complex': 0, 'complex_feedback': 0, 'symbolic_root': 0, 'symbolic_pair': 0, 'symbolic_nexus': 0, 'symbolic_position': 0}}
+    print('ZERO THEOREM V4.7.1 - ZERO SLOTS / ROLE PATHS / CALCULUS')
+    print('SymPy:', sp.__version__)
+    print('Memory:', memory_path())
+    print('Foundation:', f['states'])
+    print('Zero records:', [z['id'] for z in f['zero_records']])
+    print('00404 ->', m['reference']['breakdown'])
+    print('Exact arithmetic and foundation checks: PASS')
+    emergence = []
+    for _ in range(EMERGENCE_EVENTS_PER_RUN):
+        emergence.append(register_next_state(m))
+    print('New emergence events:', [(e['counted_states'], e['result']) for e in emergence])
+    upgrade_v44(m)
+    import_symbolic_sources(m)
+    schedule_symbolic_zero_positions(m)
+    removed = rebalance_queue(m)
+    journal(m, 'queue_rebalance', removed_duplicates=removed, pending=len(m['queue']))
+    print('Duplicate pending tasks removed:', removed)
+    # Work queue is persistent. Each task is removed only after completion.
+    # Rotate through tasks to prevent any one pathway monopolising the run.
+    # Count a bounded number of states first, so new values enter this run.
+    processed = 0
+    nexus_processed = 0
+    complex_processed = 0
+    symbolic_processed = 0
+    while processed < WORK_PER_RUN and m['queue_head'] < len(m['queue']):
+        if stats['new'] >= MAX_NEW_EXPRESSIONS_PER_RUN: break
+        task = m['queue'][m['queue_head']]
+        kind = task['kind']
+        if kind in ('nexus', 'zero_scan', 'zero_source') and nexus_processed >= NEXUS_WORK_PER_RUN:
+            # Deferred work stays pending; it is not a completed operation.
+            m['queue'].append(dict(task))
+            m['queue_head'] += 1
+            processed += 1
+            continue
+        if kind in ('symbolic_root', 'symbolic_pair', 'symbolic_nexus', 'symbolic_position') and symbolic_processed >= SYMBOLIC_WORK_PER_RUN:
+            m['queue'].append(dict(task))
+            m['queue_head'] += 1
+            processed += 1
+            continue
+        if kind in ('complex', 'complex_feedback') and complex_processed >= COMPLEX_WORK_PER_RUN:
+            # Keep the task pending, including its deduplication key. A
+            # deferred task has not been selected or completed.
+            m['queue'].append(dict(task))
+            m['queue_head'] += 1
+            processed += 1
+            continue
+        selected_key = task_key(task)
+        tangent_selected(m, task)
+        if kind in ('symbolic_root', 'symbolic_pair', 'symbolic_nexus', 'symbolic_position'):
+            if kind == 'symbolic_nexus':
+                completed = work_symbolic_nexus(m, task, stats)
+            elif kind == 'symbolic_position':
+                completed = work_symbolic_position(m, task, stats)
+            else:
+                completed = work_symbolic(m, task, stats)
+            symbolic_processed += 1
+        elif kind == 'emerge':
+            # The emergence event has already been handled this run.
+            completed = True
+        elif kind in ('nexus', 'zero_scan', 'zero_source'):
+            if kind == 'zero_scan':
+                completed = work_zero_scan(m, task, stats)
+            elif kind == 'zero_source':
+                completed = work_zero_source(m, task, stats)
+            else:
+                completed = work_nexus(m, task, stats)
+            nexus_processed += 1
+        elif kind == 'position': completed = work_position(m, task, stats)
+        elif kind in ('complex', 'complex_feedback'):
+            worker = work_complex_feedback if kind == 'complex_feedback' else work_complex
+            completed = worker(m, task, stats)
+            complex_processed += 1
+        elif kind == 'frontier': completed = work_frontier(m, task, stats)
+        elif kind == 'pair': completed = work_pair(m, task, stats)
+        elif kind == 'consume_op': completed = work_consume_op(m, task, stats)
+        elif kind == 'consume': completed = work_consume(m, task, stats)
+        elif kind == 'revisit': completed = work_revisit(m, task, stats)
+        else: raise ValueError('Unknown queued work kind: ' + str(kind))
+        if not completed:
+            # The task remains at queue_head with its next operation/slot.
+            # Save completed work and the resume cursor in the normal path.
+            m['_pending_keys'].discard(selected_key)
+            m['_pending_keys'].add(task_key(task))
+            stats['paused_tasks'] += 1
+            tangent_paused(m, task, selected_key)
+            break
+        tangent_completed(m, task, selected_key=selected_key)
+        m['_pending_keys'].discard(selected_key)
+        m['queue_head'] += 1
+        stats['processed'][kind] += 1
+        processed += 1
+    # Compact consumed queue prefix without losing unfinished work.
+    if m['queue_head'] > 2000:
+        m['queue'] = m['queue'][m['queue_head']:]
+        m['queue_head'] = 0
+    role_stats = work_roles(m)
+    calculus_stats = work_calculus(m)
+    run_id = len(m['runs']) + 1
+    journal(m, 'run_complete', run=run_id, expressions=len(m['expressions']), results=len(m['results']), pending=len(m['queue'])-m['queue_head'])
+    m['runs'].append({'run': run_id, 'timestamp': time.time(),
+                      'processed': stats['processed'], 'new': stats['new'],
+                      'symbolic_new': stats['symbolic_new'],
+                      'paused_tasks': stats['paused_tasks'],
+                      'expressions_total': len(m['expressions'])})
+    coverage = zero_core_report(m)
+    if not coverage['complete']:
+        raise ValueError('Zero-core archive passage coverage failed; memory not saved')
+    save_memory(m)
+    print('Zero-core archive passage coverage:', coverage)
+    print('Zero-slot role exploration:', role_stats)
+    print('Calculus exploration:', calculus_stats)
+    print('Run:', run_id, 'Tasks:', stats['processed'])
+    print('New expressions:', stats['new'], 'Archive:', len(m['expressions']))
+    print('Tasks paused at expression budget:', stats['paused_tasks'])
+    print('Distinct results:', len(m['results']))
+    print('Legacy rational recorded transitions:', len(m['network']['transitions']))
+    print('Observer proposals:', len(m['observer']['proposals']))
+    print('Blocked operations:', len(m['blocked']))
+    print('Zero-assisted proposals (NOT approved):', len(m['zero_proposals']))
+    print('Nexus transformations:', len(m['nexus_events']))
+    print('Zero leaf metadata repairs:', m['zero_runtime']['leaf_metadata_repairs'])
+    print('Total emergence events:', len(m['emergence_events']))
+    print('Executed positional pathways:', stats['processed']['position'])
+    print('Feedback frontier values:', len(m.get('frontier_seen', [])))
+    print('Remaining queued tasks:', len(m['queue']) - m['queue_head'])
+    print('Genesis journal events:', m['genesis']['next_seq'] - 1)
+    print('Tangent opportunities:', m['tangent_ledger']['generated'], 'selected:', m['tangent_ledger']['selected'], 'completed:', m['tangent_ledger']['completed'])
+    print('Duplicate expressions observed:', m['tangent_ledger'].get('duplicate_expressions', 0), 'duplicate pending attempts:', m['tangent_ledger'].get('duplicate_pending', 0))
+    print('Exact complex results:', len(m['complex_archive']['results']), 'complex expressions:', len(m['complex_archive']['expressions']))
+    sa = m['symbolic_archive']
+    print('Exact symbolic forms:', len(sa['results']), 'expressions:', len(sa['expressions']),
+          'new operation expressions:', stats['symbolic_new'])
+    print('Symbolic construction import cursors:', sa['construction_import_cursors'])
+    print('Pending source construction imports:', {
+        domain: max(0, len(archive_records(m, domain)) - cursor)
+        for domain, cursor in sa['construction_import_cursors'].items()})
+    print('Imports outside configured limits:', {domain: len(items) for domain, items in sa['import_deferred'].items()})
+    print('Symbolic zero-nexus constructions:', len(m['symbolic_nexus_events']))
+    print_v45_summary(m)
+    print_operation_totals(m)
+    print('Index commands: index, index -10 10, gaps -30 30, complex-index')
+    print('Symbolic queries: symbolic-index, symbolic sqrt(2), symbolic 2**3, symbolic sqrt(-2)')
+    print('All value queries include every archive; operations/totals shows whole-engine counters.')
+    print('Role queries: roles-index, roles 7 (record number)')
+    print('Calculus queries: calculus-index, calculus 7 (polynomials; integral families include +C)')
+    print('Zero-core coverage command: zero-core')
+    print('Saved. Re-run to continue exploring.')
+    while True:
+        try: text = input('\nQuery an archived value (ENTER to exit): ').strip()
+        except (EOFError, KeyboardInterrupt): break
+        if not text: break
+        if text.lower() == 'zero-core':
+            print(zero_core_report(m))
+            continue
+        if text.lower() == 'integrity':
+            print_archive_link_audit(m)
+            continue
+        if text.lower() in ('operations', 'totals'):
+            print_operation_totals(m)
+            continue
+        if query_roles(m, text): continue
+        if query_calculus(m, text): continue
+        if query_symbolic(m, text): continue
+        if not query_v45(m, text): query(m, text)
+
+
+if __name__ == '__main__':
+    import sys
+    if sys.argv[1:] == ['--integrity']:
+        if os.path.exists(memory_path()):
+            print_archive_link_audit(load_memory())
+        else:
+            print('No saved memory found to inspect.')
+    elif sys.argv[1:]:
+        print('Usage: python zero_theoremV4.7.1.py [--integrity]')
+    else:
+        run()
+
+
+
+
+
+
