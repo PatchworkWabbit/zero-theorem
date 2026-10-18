@@ -11,7 +11,7 @@ V4.7.14 validates oversized archives with the existing strict parser, whole-body
 - A real adaptive engine cycle continued from saved run 27 to run 28, reaching 4,197 rational expressions (173 added) and adding 337 total archive records.
 - The cycle reported 90 processed tasks, zero archive-link issues, zero independent rational contradictions and preservation of every existing archive prefix.
 - SHA-256 confirmed the uploaded source remained unchanged.
-- Host runtime: Python with SymPy 1.14.0. Android execution has not yet been tested.
+- Host runtime: Python with SymPy 1.14.0. User-provided Android output on 2026-10-18 confirmed selection of the regenerated branch at run 31 and a normal saved continuation at run 32 (4,864 rational expressions; complete passage coverage reported).
 
 ## Phone use
 
