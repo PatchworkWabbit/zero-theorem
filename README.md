@@ -7,6 +7,13 @@ Current development version: V4.7.11 (recipe consistency and tested adaptive rec
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
+## Reconstruction blueprint and zero-functionality audit
+
+- [Reconstruction blueprint: development stages, architecture and rebuild tests](docs/ZERO_THEOREM_RECONSTRUCTION_BLUEPRINT.md)
+- [V4.7.11 zero-functionality audit: confirmed coverage, reproducible probes and remaining work](docs/ZERO_CORE_AUDIT_V4.7.11.md)
+
+The blueprint explains how the engine was built and how to reconstruct its design. The audit distinguishes tested recovery/regeneration behavior from remaining verification, reconstruction and feedback gaps. These documents describe the V4.7.11 checkpoint; they do not change the engine.
+
 ## V4.7.11: controlled damage experiments
 
 - [Current engine: zero_theoremV4.7.11.py](zero_theoremV4.7.11.py)
