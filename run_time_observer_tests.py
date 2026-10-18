@@ -33,11 +33,41 @@ def load_module(path, name):
     return module
 
 
+def find_bundle_folder():
+    """Pydroid's exec wrapper may supply its own __file__, not this runner's."""
+    candidates = [Path(__file__).resolve().parent, Path.cwd()]
+    if sys.argv and sys.argv[0]:
+        candidates.append(Path(sys.argv[0]).expanduser().resolve().parent)
+    def complete(folder):
+        return all((folder / name).is_file() for name in
+                   ('test_time_observer.py', ENGINE))
+    for folder in candidates:
+        if complete(folder):
+            return folder
+    print('Pydroid did not supply the extracted test folder.', flush=True)
+    print('Paste the full folder path containing test_time_observer.py and ' + ENGINE,
+          flush=True)
+    while True:
+        value = input('Extracted test folder (ENTER to cancel): ').strip().strip('\"\'')
+        if not value:
+            return None
+        folder = Path(value).expanduser()
+        if folder.is_file():
+            folder = folder.parent
+        if complete(folder):
+            return folder.resolve()
+        print('Required files are not together in that folder. Check the extraction destination.',
+              flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--full', action='store_true')
     args = parser.parse_args()
-    folder = Path(__file__).resolve().parent
+    folder = find_bundle_folder()
+    if folder is None:
+        return 1
+    print('Test folder:', folder, flush=True)
     module = load_module(folder / 'test_time_observer.py', 'clock_checks')
     with contextlib.ExitStack() as resources:
         if args.full:

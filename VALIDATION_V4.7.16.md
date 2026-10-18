@@ -58,7 +58,7 @@ The ten selected phone checks are run after a clean extraction before delivery. 
 ## Phone use
 
 1. Extract **zero_theorem_time_observer_tests.zip** into a separate **Time tests** folder.
-2. Open **run_time_observer_tests.py** there in Pydroid3 and press Run. Expect **TIME OBSERVER: 10 / 10 checks passed**. It uses disposable files and opens no live project memory.
+2. Open **run_time_observer_tests.py** there in Pydroid3 and press Run. If Pydroid supplies its internal launcher location, the runner asks for the full extraction folder path; paste the folder containing the runner, test file and engine. Expect **TIME OBSERVER: 10 / 10 checks passed**. It uses disposable files and opens no live project memory.
 3. Copy the top-level **zero_theoremV4.7.16.py** into `/storage/emulated/0/Documents/Lucky/Maths/`, beside the original memory JSON and the complete `.adaptive-work` folder.
 4. Open that script and press Run. The independent zero clock, device-time observation and prior Task 7 recovery retry behaviour are automatic.
 5. At the normal archived-value query prompt, type **zero-clock** for the independent zero clock, or **time** for elapsed/UTC/CPU observations. Their separate files are saved beside the active memory.
