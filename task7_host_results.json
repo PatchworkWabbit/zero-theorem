@@ -1,0 +1,34 @@
+{
+  "engine": "V4.7.15",
+  "checks": 108,
+  "passed": true,
+  "runs": [
+    {
+      "log": "task7-test-log.txt",
+      "checks": 12,
+      "seconds": 19.713,
+      "passed": true
+    },
+    {
+      "log": "task7-additional-tests.txt",
+      "checks": 3,
+      "seconds": 6.925,
+      "passed": true
+    },
+    {
+      "log": "task7-final-extra-tests.txt",
+      "checks": 5,
+      "seconds": 3.988,
+      "passed": true
+    },
+    {
+      "log": "task7-regression-log.txt",
+      "checks": 88,
+      "seconds": 149.148,
+      "passed": true
+    }
+  ],
+  "phone_runner_checks": 10,
+  "android_confirmation": false,
+  "scope": "disposable generated public fixtures; no live user memory opened"
+}

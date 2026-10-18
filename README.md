@@ -3,9 +3,21 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.14 (validated archive growth beyond the text-repair byte budget)
+Current development version: V4.7.15 (persistent recovery retries alongside regenerated exploration)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.15: Task 7 recovery feedback
+
+- [Current engine: zero_theoremV4.7.15.py](zero_theoremV4.7.15.py)
+- [Phone test bundle](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/feature/task7-recovery-retries/zero_theorem_task7_tests.zip): extract in its own folder, open **run_task7_tests.py**, press Run. Expect **TASK 7: 10 / 10 checks passed**.
+- [Validation and phone installation](VALIDATION_V4.7.15.md)
+
+Normal runs of the selected regenerated branch now service preserved recovery checkpoints. Retries are triggered by changed executable rules, changed recovery checkpoints, newly available constructions matching retained payload digests, or unfinished feedback work. Matching numbers alone do not supply historical evidence. Exact-matching constructions supply recipe proposals; the existing workers independently reexecute and validate them.
+
+A verified recovery candidate is retained separately. The active regenerated branch continues, and the original source and active selection remain unchanged. No authenticated historical chronology is claimed. Each retry admits at most eight recipe proposals and eight verifier executions. Parsing and validation are indivisible, so the two-second allowance is cooperative.
+
+After the phone tests, put **zero_theoremV4.7.15.py** in the existing **Maths** folder beside the original memory JSON and its complete `.adaptive-work` folder; open that script in Pydroid3 and press Run. It follows the existing active pointer and automatically services the old recovery trial. Device confirmation of Task 7 is still pending.
 
 ## V4.7.14: Continue valid memories beyond 24 MiB
 
@@ -14,7 +26,7 @@ Repository: PatchworkWabbit/zero-theorem
 - Oversized memories must pass strict JSON, archive, foundation, arithmetic and link validation. Text observations still pass through Z0.
 - Damaged oversized input remains unchanged; this change does not remove the text-repair search budget.
 - Existing adaptive checkpoints and pending queues continue through the existing resume workflow. Keep the script alongside the original memory and its `.adaptive-work` folder; do not replace the source with a regeneration trial.
-- Phone execution of this version still requires device testing.
+- User-provided Android output confirmed V4.7.14 selected regeneration and continued through normal run 32.
 
 ## V4.7.13: Task 6 typed-domain reconstruction
 
