@@ -7044,6 +7044,14 @@ def print_time_report(path):
 
 
 _zt16_previous_query = query
+_zt16_previous_query_v45 = query_v45
+
+def query_v45(m, text):
+    # Named clock commands must reach their handler before complex parsing.
+    if text.strip().lower() in ('time', 'time-report', 'zero-clock', 'zero-time'):
+        query(m, text)
+        return True
+    return _zt16_previous_query_v45(m, text)
 
 def query(m, text):
     if text.strip().lower() in ('zero-clock', 'zero-time'):

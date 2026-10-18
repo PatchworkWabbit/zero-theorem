@@ -51,14 +51,14 @@ The equivalence check compares every mathematical record payload across all five
 
 Nine additional zero-clock checks cover its independent origin and state transformations, growth coordinates, no ticks from elapsed waiting, no double counting after repeated observations or reconstruction, persistence across sessions, exclusion of pending slots, failed-save preservation, actual committed growth and independence from wall timers and the role grammar.
 
-The inherited 108-check suite is also executed against the new engine. The combined full suite passed **130 / 130 checks** on the development host. The full runner extracts the prior Task 7 bundle to a temporary folder and substitutes V4.7.16 bytes under its previous import filename so the original assertions and public fixtures are retained. The complete result is saved in `time_observer_full_results.json`.
+The inherited 108-check suite is also executed against the new engine. The combined full suite passed **131 / 131 checks** on the development host. The full runner extracts the prior Task 7 bundle to a temporary folder and substitutes V4.7.16 bytes under its previous import filename so the original assertions and public fixtures are retained. The complete result is saved in `time_observer_full_results.json`.
 
-The ten selected phone checks are run after a clean extraction before delivery. Android execution of the new observer remains unconfirmed.
+The user confirmed the original ten selected checks on Android and normal engine continuation. A follow-up regression checks the actual interactive routing for all four clock commands before complex-number parsing; the updated phone runner contains eleven checks. Android confirmation of this routing fix is pending.
 
 ## Phone use
 
 1. Extract **zero_theorem_time_observer_tests.zip** into a separate **Time tests** folder.
-2. Open **run_time_observer_tests.py** there in Pydroid3 and press Run. If Pydroid supplies its internal launcher location, the runner asks for the full extraction folder path; paste the folder containing the runner, test file and engine. Expect **TIME OBSERVER: 10 / 10 checks passed**. It uses disposable files and opens no live project memory.
+2. Open **run_time_observer_tests.py** there in Pydroid3 and press Run. If Pydroid supplies its internal launcher location, the runner asks for the full extraction folder path; paste the folder containing the runner, test file and engine. Expect **TIME OBSERVER: 11 / 11 checks passed**. It uses disposable files and opens no live project memory.
 3. Copy the top-level **zero_theoremV4.7.16.py** into `/storage/emulated/0/Documents/Lucky/Maths/`, beside the original memory JSON and the complete `.adaptive-work` folder.
 4. Open that script and press Run. The independent zero clock, device-time observation and prior Task 7 recovery retry behaviour are automatic.
 5. At the normal archived-value query prompt, type **zero-clock** for the independent zero clock, or **time** for elapsed/UTC/CPU observations. Their separate files are saved beside the active memory.

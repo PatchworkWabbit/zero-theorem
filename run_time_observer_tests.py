@@ -14,6 +14,7 @@ import zipfile
 
 ENGINE = 'zero_theoremV4.7.16.py'
 PHONE_TESTS = [
+    'test_interactive_clock_commands_precede_complex_parser',
     'test_start_at_zero_and_exact_elapsed_cpu_observation',
     'test_wall_clock_correction_does_not_reverse_elapsed',
     'test_restart_links_events_without_subtracting_old_timer',

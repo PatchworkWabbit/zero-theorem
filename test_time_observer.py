@@ -287,5 +287,18 @@ class TimeObserverTests(unittest.TestCase):
         self.assertEqual(Path(e._zt16_path(self.path)).read_bytes(), raw)
 
 
+    def test_interactive_clock_commands_precede_complex_parser(self):
+        memory = e.empty_memory()
+        for command in ('time', 'time-report', 'zero-clock', 'zero-time'):
+            handler = 'print_time_report' if command.startswith('time') else 'print_zero_clock_report'
+            with self.subTest(command=command), patch.object(e, handler) as report, \
+                    patch.object(e, 'parse_complex_query', side_effect=AssertionError('clock reached complex parser')), \
+                    patch.object(e, 'memory_path', return_value=self.path):
+                for early in (e.query_roles, e.query_calculus, e.query_symbolic):
+                    self.assertFalse(early(memory, command))
+                self.assertTrue(e.query_v45(memory, command))
+                report.assert_called_once_with(self.path)
+
+
 if __name__ == '__main__':
     unittest.main()

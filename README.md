@@ -10,7 +10,7 @@ Repository: PatchworkWabbit/zero-theorem
 ## V4.7.16: Independent zero clock and time observer
 
 - [Current engine: zero_theoremV4.7.16.py](zero_theoremV4.7.16.py)
-- [Time observer phone tests](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/feature/zero-time-observer/zero_theorem_time_observer_tests.zip): extract in its own folder, open **run_time_observer_tests.py**, press Run. Expect **TIME OBSERVER: 10 / 10 checks passed**.
+- [Time observer phone tests](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/feature/zero-time-observer/zero_theorem_time_observer_tests.zip): extract in its own folder, open **run_time_observer_tests.py**, press Run. Expect **TIME OBSERVER: 11 / 11 checks passed**.
 - [Timing semantics, validation and phone instructions](VALIDATION_V4.7.16.md)
 
 The independent zero clock starts at **T0 = 0** and registers further clock states as newly observed foundation states and accepted constructions expand mathematical space. It has its own `.zero-clock.json` ledger and state transformations. It does not use the role grammar or wall timers to generate its states. Use **zero-clock** at the query prompt to inspect it. Existing projects establish a fresh observation boundary at zero; earlier clock history is not invented.
