@@ -1,0 +1,20 @@
+{
+  "engine": "V4.7.12",
+  "host_regressions": 66,
+  "phone_runner_host_checks": 10,
+  "files": {
+    "zero_theoremV4.7.12.py": "4f16d73600f1089888eb7eb0925bb6b490a886fa5df873fc28ce70aeaa1462a1",
+    "run_task5_tests.py": "05a1b79ae7cc15ed39b97483bd77ccb28663b2c7a7a8a1860eada4462058fbc4",
+    "VALIDATION_V4.7.12.md": "ae908693a63fa1baaa481944c5e46f16f720ac3a22cd545d7a52c3a77cbc5db0",
+    "test_zero_theorem_v4712_domains.py": "036a4382dc1877ad889a967528bd2e709416adad0eb0e5dbee120548bfbd4609",
+    "test_zero_theorem_v4712_adaptive.py": "91635c6aa318936fa7cecf7ef1c3ec3771196c46871006f368fc45490e524fbd",
+    "test_zero_theorem_v4712_regression.py": "bae65f87b1cf1f79f65c9cfc42f174752f3e12854bba6b1787f798d570bbc643",
+    "test_recipe_consistency_v4712.py": "c8b4288cc4bf4d1dee3b53cfe98c101c20cc3bd767fd60d2a2ac6b641071bc48",
+    "task4_fixture/baseline.json": "5d105759ce2655437c6177ac779c70a9dae8dfffcade67eee54d2e0d107ec900",
+    "task2_source/zero_theorem_rabbitholes_v41_memory.json.zero-body-candidate.json": "070e607fa8e8f067046b7945e732dea82dca3d540c627557b01b49959de16a75",
+    "task5_regression_results.txt": "6230acfd10a258c8bf96942cfde836b0b1e4d4b4b8610f9ec260f512cef97315",
+    "task5_probe_results.json": "51896b778aa1a7e24fc0a317a2c65a4215cce864e26f75ca37c8f07c59050f82",
+    "task5_phone_smoke.txt": "a485c7876983024cfcace02ae14c22fe5cfe3db3f824905a6c06d3e5e355f035"
+  },
+  "zip_sha256": "5272923aefbd6a6e45999581c7700c0f371dbcb659b2d9f3075e037871ad3aaa"
+}

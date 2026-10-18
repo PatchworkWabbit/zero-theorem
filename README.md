@@ -3,9 +3,23 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.11 (recipe consistency and tested adaptive recovery/regeneration)
+Current development version: V4.7.12 (independent domain verification and typed calculus bridges)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.12: Task 5 independent domain verification
+
+- [Current engine: zero_theoremV4.7.12.py](zero_theoremV4.7.12.py)
+- [Task 5 phone test ZIP](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/main/zero_theorem_task5_tests.zip)
+- [Validation, scope and phone instructions](VALIDATION_V4.7.12.md)
+- [66-check host regression result](task5_regression_results.txt)
+- [Reproduced audit probes](task5_probe_results.json)
+
+Read-only replay now checks supported rational, complex, symbolic, calculus and role constructions against their parents and typed sources. Incorrect complex/calculus outputs identified by the V4.7.11 audit are rejected even with internally consistent digests. The valid calculus chain `7 → 7x → 7x² → 14x → 14` now creates a verified rational bridge and completes a saved continuation. Legacy bridge evidence is preserved. Non-rational findings stay separate from the rational repair queue.
+
+All 66 host regression tests pass. The extracted phone bundle's 10 selected checks also pass on the host; user-device confirmation remains outstanding. Extract the ZIP in a separate folder, open **run_task5_tests.py** in Pydroid3 and press Run. It uses disposable fixtures and does not open live user memory. The bundle includes the engine, all test code and fixtures for the full suite. The existing adaptive trial can remain in its own folder.
+
+The V4.7.11 audit below remains a historical checkpoint. General non-rational reconstruction, automatic evidence-triggered recovery retries, alternate-parent retention and consistent resource-deferred retries remain subsequent work. Symbolic verification shares the SymPy backend; these checks are not a formal proof or novelty claim.
 
 ## Reconstruction blueprint and zero-functionality audit
 

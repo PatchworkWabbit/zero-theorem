@@ -1,0 +1,125 @@
+{
+  "engine": "V4.7.12",
+  "inputs_before": {
+    "zero_theoremV4.7.12.py": "4f16d73600f1089888eb7eb0925bb6b490a886fa5df873fc28ce70aeaa1462a1",
+    "task4_fixture/baseline.json": "5d105759ce2655437c6177ac779c70a9dae8dfffcade67eee54d2e0d107ec900"
+  },
+  "probes": {
+    "baseline": {
+      "accepted": true
+    },
+    "missing_record_reconstruction": {
+      "rational": {
+        "deleted_id": 20,
+        "ready": true,
+        "target_status": "intact"
+      },
+      "complex": {
+        "deleted_id": 125,
+        "ready": false,
+        "target_status": "zero_recovery_pending"
+      },
+      "symbolic": {
+        "deleted_id": 87,
+        "ready": false,
+        "target_status": "zero_recovery_pending"
+      },
+      "calculus": {
+        "deleted_id": 19,
+        "ready": false,
+        "target_status": "zero_recovery_pending"
+      },
+      "roles": {
+        "deleted_id": 23,
+        "ready": false,
+        "target_status": "zero_recovery_pending"
+      }
+    },
+    "incorrect_complex_constructor": {
+      "new_id": 126,
+      "expected_real": "0",
+      "expected_imaginary": "1",
+      "stored_real": "123",
+      "stored_imaginary": "0",
+      "link_issues": 0,
+      "validation": {
+        "accepted": false,
+        "error": "Candidate has expression/index contradictions: [{'archive': 'complex', 'id': 126, 'reasons': ['complex_arithmetic_disagreement']}]"
+      }
+    },
+    "incorrect_calculus_constructor": {
+      "new_id": 20,
+      "expected_coefficients": [
+        "0"
+      ],
+      "stored_coefficients": [
+        "1"
+      ],
+      "link_issues": 0,
+      "validation": {
+        "accepted": false,
+        "error": "Candidate has expression/index contradictions: [{'archive': 'calculus', 'id': 20, 'reasons': ['calculus_coefficient_disagreement']}]"
+      }
+    },
+    "correct_calculus_new_constant": {
+      "steps": [
+        {
+          "operation": "multiply_x",
+          "coefficients": [
+            "0",
+            "7"
+          ],
+          "id": 21
+        },
+        {
+          "operation": "multiply_x",
+          "coefficients": [
+            "0",
+            "0",
+            "7"
+          ],
+          "id": 22
+        },
+        {
+          "operation": "differentiate",
+          "coefficients": [
+            "0",
+            "14"
+          ],
+          "id": 23
+        },
+        {
+          "operation": "differentiate",
+          "coefficients": [
+            "14"
+          ],
+          "id": 24
+        }
+      ],
+      "rational_bridge": "14",
+      "link_issues": 0,
+      "validation": {
+        "accepted": true
+      }
+    },
+    "alternate_parent_same_tree": {
+      "first_parents": [
+        1,
+        4
+      ],
+      "alternate_parents": [
+        149,
+        4
+      ],
+      "same_parent_tree": true,
+      "operation": "+",
+      "first_id": 296,
+      "alternate_id": null
+    }
+  },
+  "inputs_after": {
+    "zero_theoremV4.7.12.py": "4f16d73600f1089888eb7eb0925bb6b490a886fa5df873fc28ce70aeaa1462a1",
+    "task4_fixture/baseline.json": "5d105759ce2655437c6177ac779c70a9dae8dfffcade67eee54d2e0d107ec900"
+  },
+  "inputs_unchanged": true
+}
