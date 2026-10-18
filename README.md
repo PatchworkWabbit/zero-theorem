@@ -3,9 +3,23 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.12 (independent domain verification and typed calculus bridges)
+Current development version: V4.7.13 (typed reconstruction across complex, symbolic, calculus and role archives)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.13: Task 6 typed-domain reconstruction
+
+- [Current engine: zero_theoremV4.7.13.py](zero_theoremV4.7.13.py)
+- [Task 6 phone test ZIP](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/main/zero_theorem_task6_tests.zip)
+- [Validation, reconstruction scope and phone instructions](VALIDATION_V4.7.13.md)
+- [88-test regression result](task6_regression_results.txt)
+- [Reconstruction case evidence](task6_case_results.json)
+
+Typed recipes now support missing complex, symbolic, polynomial-calculus and role records. The engine reexecutes rules from retained parents and sources, requires the original construction digest, then independently checks the result. Stable IDs and accepted-record passage counts are preserved. Missing dependencies, contradictory evidence and unsupported legacy cases remain pending.
+
+All 88 release tests passed, including individual deletion/reconstruction of every one of the fixture's 258 non-rational records and reconstruction when all four non-rational record lists were missing while their recipes and supporting structures remained. Cross-domain chains, faulty-kernel rejection, source preservation, adaptive recovery selection and actual saved continuation were tested. These are constrained reconstruction results, not recovery after erasing all information.
+
+Extract the Task 6 ZIP in a separate folder, open **run_task6_tests.py** in Pydroid3, and press Run. Its 10 selected checks pass in the extracted bundle on the host; user-device confirmation of V4.7.13 remains outstanding. Disposable fixtures are used and no live user memory is opened. The prior adaptive regeneration trial can remain in its own folder.
 
 ## V4.7.12: Task 5 independent domain verification
 
@@ -17,7 +31,7 @@ Repository: PatchworkWabbit/zero-theorem
 
 Read-only replay now checks supported rational, complex, symbolic, calculus and role constructions against their parents and typed sources. Incorrect complex/calculus outputs identified by the V4.7.11 audit are rejected even with internally consistent digests. The valid calculus chain `7 → 7x → 7x² → 14x → 14` now creates a verified rational bridge and completes a saved continuation. Legacy bridge evidence is preserved. Non-rational findings stay separate from the rational repair queue.
 
-All 66 host regression tests pass. The extracted phone bundle's 10 selected checks also pass on the host; user-device confirmation remains outstanding. Extract the ZIP in a separate folder, open **run_task5_tests.py** in Pydroid3 and press Run. It uses disposable fixtures and does not open live user memory. The bundle includes the engine, all test code and fixtures for the full suite. The existing adaptive trial can remain in its own folder.
+All 66 host regression tests pass. The user's Android run independently confirmed **10 / 10 selected checks passed**; see [phone confirmation](task5_android_confirmation.txt). Extract the ZIP in a separate folder, open **run_task5_tests.py** in Pydroid3 and press Run. It uses disposable fixtures and does not open live user memory. The bundle includes the engine, all test code and fixtures for the full suite. The existing adaptive trial can remain in its own folder.
 
 The V4.7.11 audit below remains a historical checkpoint. General non-rational reconstruction, automatic evidence-triggered recovery retries, alternate-parent retention and consistent resource-deferred retries remain subsequent work. Symbolic verification shares the SymPy backend; these checks are not a formal proof or novelty claim.
 

@@ -1,0 +1,23 @@
+{
+  "engine": "V4.7.13",
+  "regression_tests": 88,
+  "phone_selection": 10,
+  "nonrational_individual_record_deletions": 258,
+  "files": {
+    "zero_theoremV4.7.13.py": "19a96261d400f81dc9b4c53d3b88121093b718b26f746e98c20d35e1f77ff163",
+    "run_task6_tests.py": "9ec3ca5ca27246e0d71ddc611a58af97cf58583c5d340009fee74e1c77e17dcc",
+    "VALIDATION_V4.7.13.md": "ddb2eac6b314c5b729d1a95cf45fdf976d01d82a8937d2c5fd7463e7fc64a592",
+    "test_zero_theorem_v4713_recovery.py": "1e70b8a50e07735492e4d801596f0ae24e54e6c39bac9dbf2bd184d0052b497a",
+    "test_zero_theorem_v4713_domains.py": "3c55f8869e82077d1f965bd49e70d3b97650c00a3ce4778c6692f79463b9d56e",
+    "test_zero_theorem_v4713_adaptive.py": "aae9e846bf51b0380de1015ba4653a23d843c8f4ba3ad1adf75f9283852c45d1",
+    "test_zero_theorem_v4713_regression.py": "3a9804f59af590a9b6aea3d70c88a33f6ca508bbed1d131a1b4b6b3ba7ff4498",
+    "test_recipe_consistency_v4713.py": "16ead7905b0941af554aa7a5ff706c5e83d1e6207d40f0fc97c56b8e63cfb759",
+    "task4_fixture/baseline.json": "5d105759ce2655437c6177ac779c70a9dae8dfffcade67eee54d2e0d107ec900",
+    "task2_source/zero_theorem_rabbitholes_v41_memory.json.zero-body-candidate.json": "070e607fa8e8f067046b7945e732dea82dca3d540c627557b01b49959de16a75",
+    "task6_regression_results.txt": "1ecb3919943386fc09868d5fa7f2acc041c7c790ce2b7fc9b2016b6b740688ce",
+    "task6_legacy_marker_results.txt": "cb2f32c80da4a896b6e0cb6023b026efd921bfbcb36ca5f64281f43aa918f5c0",
+    "task6_case_results.json": "7698f6bf52e6498e96c82a219150ebba05b1f383b35292b6c65068bc6a70d922",
+    "task6_case_probes.py": "e5b39626a7cd228b38f5598dbf94bc1f1b44f371908c154fb4bd5ea724b6d5e9"
+  },
+  "zip_sha256": "fd00a9125e3e7930cc01f4ca5657691d8fd970108ddb8b0708ced24443733d97"
+}
