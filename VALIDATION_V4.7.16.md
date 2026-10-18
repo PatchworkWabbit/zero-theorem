@@ -53,7 +53,7 @@ Nine additional zero-clock checks cover its independent origin and state transfo
 
 The inherited 108-check suite is also executed against the new engine. The combined full suite passed **131 / 131 checks** on the development host. The full runner extracts the prior Task 7 bundle to a temporary folder and substitutes V4.7.16 bytes under its previous import filename so the original assertions and public fixtures are retained. The complete result is saved in `time_observer_full_results.json`.
 
-The user confirmed the original ten selected checks on Android and normal engine continuation. A follow-up regression checks the actual interactive routing for all four clock commands before complex-number parsing; the updated phone runner contains eleven checks. Android confirmation of this routing fix is pending.
+The user confirmed the original ten selected checks on Android. A follow-up regression checks the actual interactive routing for all four clock commands before complex-number parsing; the updated phone runner contains eleven checks. The user subsequently confirmed the corrected `time` query, independent zero clock and established regeneration continuation on Android (run 33: 10,243 accepted records, no structural link issues). Recovery retry attempt 1 remained pending. These observations do not demonstrate completed recovery or merging of memories. See `AUDIT_V4.7.16.md` for additional malformed-ledger and launcher findings outside the existing regression coverage.
 
 ## Phone use
 

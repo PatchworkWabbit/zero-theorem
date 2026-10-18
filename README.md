@@ -7,6 +7,10 @@ Current development version: V4.7.16 (independent zero time clock and process-ti
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
+Latest audit: [V4.7.16 repository and resilience audit](AUDIT_V4.7.16.md).
+The current development files are on `feature/zero-time-observer`; `main`
+still contains V4.7.13 pending review of stacked draft PRs #3, #4 and #5.
+
 ## V4.7.16: Independent zero clock and time observer
 
 - [Current engine: zero_theoremV4.7.16.py](zero_theoremV4.7.16.py)
@@ -31,7 +35,7 @@ Normal runs of the selected regenerated branch now service preserved recovery ch
 
 A verified recovery candidate is retained separately. The active regenerated branch continues, and the original source and active selection remain unchanged. No authenticated historical chronology is claimed. Each retry admits at most eight recipe proposals and eight verifier executions. Parsing and validation are indivisible, so the two-second allowance is cooperative.
 
-After the phone tests, put **zero_theoremV4.7.15.py** in the existing **Maths** folder beside the original memory JSON and its complete `.adaptive-work` folder; open that script in Pydroid3 and press Run. It follows the existing active pointer and automatically services the old recovery trial. Device confirmation of Task 7 is still pending.
+After the phone tests, put the latest engine (currently **zero_theoremV4.7.16.py**, which includes this feature) in the existing **Maths** folder beside the original memory JSON and its complete `.adaptive-work` folder; open that script in Pydroid3 and press Run. It follows the existing active pointer and automatically services the old recovery trial. On 18 October 2026 the user confirmed retry attempt 1 remained pending while the established regeneration branch completed run 33. A recovered candidate or memory merge was not demonstrated by that run.
 
 ## V4.7.14: Continue valid memories beyond 24 MiB
 
