@@ -1,0 +1,3 @@
+Interactive query and CLI passed on disposable normal-run observations.
+Exact sample matched the held-out original. Damaged source bytes unchanged.
+Temporal recovery: exact_supported | timestamp: 3103351666657 | source preserved; candidate is separate.

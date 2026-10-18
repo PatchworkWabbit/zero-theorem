@@ -3,13 +3,32 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.16 (independent zero time clock and process-time observations)
+Current development version: V4.7.17 (exact temporal recovery and validated time observations)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
 Latest audit: [V4.7.16 repository and resilience audit](AUDIT_V4.7.16.md).
-The current development files are on `feature/zero-time-observer`; `main`
-still contains V4.7.13 pending review of stacked draft PRs #3, #4 and #5.
+The current development files are on `feature/exact-temporal-recovery`; `main`
+remains unchanged. V4.7.17 builds on `feature/zero-time-observer` and the
+existing stacked development PRs. The V4.7.16 audit remains a historical
+checkpoint; V4.7.17 includes corrections for A1–A3.
+
+## V4.7.17: Exact temporal reconstruction through Z0
+
+- [Current engine: zero_theoremV4.7.17.py](zero_theoremV4.7.17.py)
+- [Phone test ZIP](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/feature/exact-temporal-recovery/zero_theoremV4.7.17_temporal_tests.zip): extract the entire ZIP, open **run_temporal_tests.py**, press Run. Expect **TEMPORAL: 68 / 68 passed**.
+- [Architecture, recovery scope and usage](README_V4.7.17.md)
+- [176/176 host validation](VALIDATION_V4.7.17.md)
+- [68/68 Android confirmation and normal-run evidence](ANDROID_V4.7.17.md)
+- [Complete extracted test sources and disposable fixtures](temporal_tests/)
+
+New construction acceptance/use observations pass the engine's actual shared zero gateway and are committed in a separate `.temporal.json` ledger after a successful mathematical save. The worker combines surviving samples, recorded time differences and typed creation/use links. It accepts a unique supported timestamp only after checking the available component and validating the complete candidate ledger. A nonzero interval remains unresolved; conflicting evidence blocks acceptance. No hidden original guides reconstruction, and no external recovery service is used.
+
+The first integrated worker supports one missing recorded wall, monotonic or CPU sample. It preserves the damaged source and writes a separate candidate/report. Prior unobserved creation times stay unknown. Existing mathematical payloads, queue choices and operation counts remain unchanged by observation. The original-memory recovery and adaptive regeneration remain separate: the user's run 34 still reports recovery pending while regeneration continues.
+
+Host checks: **176/176 passed**, including nine masked actual-clock sample comparisons. User-reported Android checks: **68/68 passed**. The intended Maths branch completed run 34 with **10,558 records**, **23,883 typed links**, **zero structural issues**, and **315 temporal events / zero reported gaps**. The release also corrects the audited retry-ledger, clock-validation and launcher-fingerprint issues.
+
+Keep the current JSON and complete `.adaptive-work` folder together. After the disposable tests, place the new engine beside the original Maths memory and run it there. When using a prompted folder path on Android, replace the file manager's **Internal storage** label with `/storage/emulated/0`; use the actual extracted folder name.
 
 ## V4.7.16: Independent zero clock and time observer
 

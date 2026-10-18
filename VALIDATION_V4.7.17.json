@@ -1,0 +1,21 @@
+{
+  "engine": "zero_theoremV4.7.17.py",
+  "engine_sha256": "c4f80ba71726ca727f03bca22ea2981ba671a5276f06aeef0f81b945b9dbd1d1",
+  "tests": 176,
+  "passed": true,
+  "seconds": 170.1348,
+  "base_engine_sha256": "844c9a77f0ea1f6915521bed82ca36bafe8fb5bcdb83eea25b9b92d51a1a36ef",
+  "test_groups": {
+    "existing_clock": 23,
+    "existing_recovery": 108,
+    "lab": 24,
+    "new_temporal": 19,
+    "new_retry_and_launcher": 2
+  },
+  "actual_clock_sample_masking_comparisons": 9,
+  "android_integrated_revision_confirmation": true,
+  "source_preservation": "damaged temporal sources and live user memories not changed by development or reconstruction tests",
+  "scope": "one absent recorded timestamp; exact-only proposals from surviving timing evidence; no earlier-history invention",
+  "android_selected_checks": 68,
+  "android_evidence": "User-pasted runner output and normal-run output; ANDROID_V4.7.17.md"
+}
