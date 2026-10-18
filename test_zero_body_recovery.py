@@ -1,4 +1,4 @@
-"""Reproducible V4.7.5 checks; no user memory or hosted fixture required."""
+"""Reproducible V4.7.8 checks; no user memory or hosted fixture required."""
 import contextlib
 import copy
 import importlib.util
@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location(
-    'zero_theorem_v475', Path(__file__).with_name('zero_theoremV4.7.5.py'))
+    'zero_theorem_v478', Path(__file__).with_name('zero_theoremV4.7.8.py'))
 engine = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(engine)
 

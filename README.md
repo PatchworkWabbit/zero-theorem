@@ -3,7 +3,7 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.5 (experimental recovery)
+Current development version: V4.7.8 (validated recovery and same-run resume)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
 
@@ -19,44 +19,60 @@ The central research question is:
 
 What mathematical structures and computational behaviours can be generated from a precise foundational system of zero, state emergence, and reusable operations?
 
-## V4.7.5 recovery experiment
+## V4.7.8 recovery and same-run resume
 
-The latest standalone script is [zero_theoremV4.7.5.py](zero_theoremV4.7.5.py).
-It adds whole-body symbol mapping, persistent recovery slots with complete
-neighbouring expressions, evidence-based reconstruction, and continuous recovery
-with checkpoints. Earlier numbered scripts remain available below.
-
-On one damaged test memory, this version produced a candidate with expression
-IDs **20, 22, 23, 116, and 117** reconstructed from surviving evidence. The
-candidate passed arithmetic/reference/coverage checks and a normal
-exploration/save/reload continuation. The user also reported a successful
-candidate on Android. An exact comparison with the intact master remains
-outstanding. This is an experimental recovery result, not a guarantee of
-arbitrary data or Python source-code repair.
-
-Install SymPy as described below. For a fresh experiment, run the script in its
-own writable folder. For recovery, place a **test copy** of the damaged memory
-beside it under `zero_theorem_rabbitholes_v41_memory.json`, then run the script.
-Recovery continues internally instead of requiring a restart every work batch.
-Candidate files are written separately; the damaged source is preserved.
+The latest standalone script is [zero_theoremV4.7.8.py](zero_theoremV4.7.8.py).
+Install SymPy once, then open this script in Pydroid3 and press Run, or use:
 
 ```bash
-python3 zero_theoremV4.7.5.py
-# Or inspect/recover an explicit test file:
-python3 zero_theoremV4.7.5.py --repair-json /path/to/test-memory.json
-# Optional user-requested pause:
-python3 zero_theoremV4.7.5.py --repair-json /path/to/test-memory.json --seconds 60
-# Reproducible tests (no user memory needed):
-python3 -m unittest -v test_zero_body_recovery
+python3 -m pip install -r requirements.txt
+python3 zero_theoremV4.7.8.py
 ```
 
-Stop/interrupt pauses recovery and saves its continuation. A forced process kill
-may lose work since the last checkpoint. Keep sidecar files beside their source
-to resume. Once a candidate is ready, inspect and run that candidate in a
-separate test folder. A normal healthy-memory run retains its exploration limits.
+Memory lives beside the script as `zero_theorem_rabbitholes_v41_memory.json`.
+For a fresh experiment, use a writable folder without an existing memory.
+For recovery experiments, use a test copy of damaged memory and keep its
+recovery sidecars beside it. Existing V4.7.5 candidate-ready checkpoints are supported.
 
-See [VALIDATION_V4.7.5.md](VALIDATION_V4.7.5.md) for exact scope, evidence, and
-remaining limitations.
+When recovery finds one unambiguous candidate that passes validation, V4.7.8
+checks the foundation, archive links, rational trees, metadata and supported
+construction re-execution; preserves the exact damaged bytes in a
+`.pre-v478-<SHA256>.bak` file; atomically installs the approved memory; and
+continues normal exploration **in the same run**. The saved memory records
+successful continuation only after the engine completes and saves its run.
+Normal exploration remains bounded per run and ends at the archive query prompt.
+
+To approve an explicit candidate and continue, optionally choosing the output memory:
+
+```bash
+python3 zero_theoremV4.7.8.py --resume-candidate CANDIDATE.json
+python3 zero_theoremV4.7.8.py --resume-candidate CANDIDATE.json MEMORY.json
+# Inspection/recovery without promoting a candidate:
+python3 zero_theoremV4.7.8.py --repair-json /path/to/test-memory.json --seconds 60
+# Read-only candidate arithmetic report:
+python3 zero_theoremV4.7.8.py --verify-candidate CANDIDATE.json
+# Assessment only; does not reset or resume:
+python3 zero_theoremV4.7.8.py --adaptive-recovery CANDIDATE.json INTACT-BACKUP.json
+# Reproducible tests, without user memory:
+python3 -m unittest -v test_zero_body_recovery test_zero_resume
+```
+
+A candidate that fails validation, a stale source fingerprint, or conflicting
+ready candidates blocks automatic approval. Recovery checkpoints retain paused
+work. Exact historical restoration is distinct from operational acceptance:
+unknown damaged spans remain recorded, and this release does not claim that
+every original byte or historical event has been restored.
+
+On the damaged test memory, expressions **20, 22, 23, 116 and 117** were
+reconstructed from surviving evidence. Fresh recovery and the saved-candidate
+handoff both resumed successfully, grew the rational archive from **132 to 296**
+records, and saved. A further run reached **437** rational records.
+The user's Android V4.7.8 run independently reported successful continuation,
+complete zero-core passage coverage across all **554** archive records, and
+**zero structural issues**. No user memory is included in this repository.
+
+See [VALIDATION_V4.7.8.md](VALIDATION_V4.7.8.md) for verification scope.
+Earlier scripts and [V4.7.5 validation](VALIDATION_V4.7.5.md) remain available.
 
 ## Previous V4.6.5 release
 
@@ -381,5 +397,3 @@ Licence: GNU General Public License v3.0 (GPLv3); see [LICENSE](LICENSE).
 Zero Theorem — Emergent Information Engine
 
 Original concept developed in 2012. Computational implementation and ongoing research developed subsequently.
-
-
