@@ -3,9 +3,18 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.13 (typed reconstruction across complex, symbolic, calculus and role archives)
+Current development version: V4.7.14 (validated archive growth beyond the text-repair byte budget)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.14: Continue valid memories beyond 24 MiB
+
+- [Current engine: zero_theoremV4.7.14.py](zero_theoremV4.7.14.py)
+- The 24 MiB damaged-text search allowance no longer blocks valid growing memories or valid adaptive sources.
+- Oversized memories must pass strict JSON, archive, foundation, arithmetic and link validation. Text observations still pass through Z0.
+- Damaged oversized input remains unchanged; this change does not remove the text-repair search budget.
+- Existing adaptive checkpoints and pending queues continue through the existing resume workflow. Keep the script alongside the original memory and its `.adaptive-work` folder; do not replace the source with a regeneration trial.
+- Phone execution of this version still requires device testing.
 
 ## V4.7.13: Task 6 typed-domain reconstruction
 
