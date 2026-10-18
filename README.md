@@ -3,9 +3,19 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.8 (validated recovery and same-run resume)
+Current development version: V4.7.10 (independent verification and adaptive recovery/regeneration)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.10: verification and adaptive recovery
+
+- [Current engine: zero_theoremV4.7.10.py](zero_theoremV4.7.10.py)
+- [Download the complete phone demo and test ZIP](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/main/zero_theoremV4.7.10_adaptive_tests.zip)
+- [Validation, scope and instructions](VALIDATION_V4.7.10.md)
+
+For the phone demonstration, extract the ZIP into a separate folder, open `run_task3_demo.py` in Pydroid3, and press Run. The ZIP includes the engine, fixture, demo and 38 passing tests. Python 3 and SymPy are required.
+
+This version executes independent rational verification feedback and compares isolated recovery and Z0 regeneration trials using measured elapsed time and a declared operational record floor. Each ready branch must validate and complete a further saved exploration run. The original source and comparison baseline are preserved. Regeneration carries a new-lineage marker; it is not presented as restored historical provenance.
 
 ## Overview
 
