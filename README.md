@@ -3,9 +3,23 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.15 (persistent recovery retries alongside regenerated exploration)
+Current development version: V4.7.16 (independent zero time clock and process-time observations)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.16: Independent zero clock and time observer
+
+- [Current engine: zero_theoremV4.7.16.py](zero_theoremV4.7.16.py)
+- [Time observer phone tests](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/feature/zero-time-observer/zero_theorem_time_observer_tests.zip): extract in its own folder, open **run_time_observer_tests.py**, press Run. Expect **TIME OBSERVER: 10 / 10 checks passed**.
+- [Timing semantics, validation and phone instructions](VALIDATION_V4.7.16.md)
+
+The independent zero clock starts at **T0 = 0** and registers further clock states as newly observed foundation states and accepted constructions expand mathematical space. It has its own `.zero-clock.json` ledger and state transformations. It does not use the role grammar or wall timers to generate its states. Use **zero-clock** at the query prompt to inspect it. Existing projects establish a fresh observation boundary at zero; earlier clock history is not invented.
+
+Separately, process phases send clock observations through Z0: UTC timestamps, elapsed time relative to a fresh zero, CPU duration and persistent event order. A restart links to the previous session while leaving any unobserved duration unknown. Timing records are stored in separate `.time-observer.json` files beside the observed memory or recovery input. Mathematical construction records and queue rules are unchanged.
+
+The observer covers loading, foundation emergence, queue exploration, role/calculus work, verification/saving and adaptive recovery/retry phases. It does not timestamp every arithmetic call. Use **time** at the query prompt to inspect the current memory's timings. Stage durations include nested work, so they must not be added together as total runtime. Normal process duration includes time at interactive query prompts.
+
+V4.7.16 includes the prior Task 7 retry feature. After the disposable phone tests, place its engine script in the existing **Maths** folder beside the original JSON and complete `.adaptive-work` folder, then open that script and press Run.
 
 ## V4.7.15: Task 7 recovery feedback
 
