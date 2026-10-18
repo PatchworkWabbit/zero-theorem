@@ -3,9 +3,20 @@
 Emergent Information Engine
 
 Project status: Experimental research software
-Current development version: V4.7.10 (independent verification and adaptive recovery/regeneration)
+Current development version: V4.7.11 (recipe consistency and tested adaptive recovery/regeneration)
 Original concept: 2012
 Repository: PatchworkWabbit/zero-theorem
+
+## V4.7.11: controlled damage experiments
+
+- [Current engine: zero_theoremV4.7.11.py](zero_theoremV4.7.11.py)
+- [Task 4 phone test ZIP](https://github.com/PatchworkWabbit/zero-theorem/raw/refs/heads/main/zero_theorem_task4_tests.zip)
+- [Task 4 results, scope and instructions](TASK4_RESULTS.md)
+- [Machine-readable results](task4_results.json)
+
+The 15-case matrix covered deleted paths, dependent paths, altered values/parents, duplicate IDs, contradictory recovery recipes, number-data erasure for 4/1/0 with and without selected recovery evidence, and a reproducible byte cut. Six damaged cases restored the baseline's archived record content; eight used validated fresh-lineage regeneration; the control continued normally. All selected branches validated, continued and saved. Forty regression checks passed.
+
+V4.7.11 also closes a recipe-consistency gap found by these tests: a saved rational recovery recipe must agree with its intact expression record before approval. For the phone confirmation, extract the ZIP and run `run_task4_tests.py`; it creates independent copies and checks three representative cases.
 
 ## V4.7.10: verification and adaptive recovery
 

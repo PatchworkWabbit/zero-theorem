@@ -1,0 +1,16 @@
+case,selected_branch,recovery_status,continuation_verified,selected_rational_records,structural_issues,independent_rational_contradictions,source_preserved,baseline_preserved,baseline_archive_prefix_exact,restored_missing_records_in_recovery_proposal,elapsed_seconds
+control,recovery,ready,True,437,0,0,True,True,True,0,4.166781262000313
+single_path_manifest,recovery,ready,True,437,0,0,True,True,True,1,3.8737092390001635
+single_path_legacy,recovery,ready,True,437,0,0,True,True,True,1,3.769649458999993
+dependent_paths,recovery,ready,True,437,0,0,True,True,True,2,4.304276626000046
+value_conflict,recovery,ready,True,437,0,0,True,True,True,0,4.911800463999953
+parent_conflict,recovery,ready,True,437,0,0,True,True,True,0,5.071700023000176
+duplicate_id_conflict,regeneration,unresolved,True,437,0,0,True,True,True,0,2.511943894000069
+manifest_recipe_conflict,regeneration,unresolved,True,437,0,0,True,True,True,0,2.785838331999912
+erase_4_records,regeneration,unresolved,True,437,0,0,True,True,True,10,3.7655552920000446
+erase_4_evidence,regeneration,unresolved,True,437,0,0,True,True,True,0,4.254785587999777
+erase_1_records,regeneration,unresolved,True,437,0,0,True,True,True,9,3.722173227999974
+erase_1_evidence,regeneration,unresolved,True,437,0,0,True,True,True,0,3.6171215069998652
+erase_0_records,regeneration,unresolved,True,437,0,0,True,True,True,8,3.8066409650000423
+erase_0_evidence,regeneration,unresolved,True,437,0,0,True,True,True,0,3.5436015479999696
+random_byte_span_404,recovery,ready,True,437,0,0,True,True,True,0,4.78762016499968
