@@ -1,0 +1,27 @@
+{
+  "scope": "disposable audit probes; no live memory opened",
+  "findings": [
+    {
+      "probe": "negative_zero_clock",
+      "observed_tick": -1,
+      "gap_reproduced": true
+    },
+    {
+      "probe": "broken_observer_event_chain",
+      "observed_first_sequence": 999,
+      "gap_reproduced": true
+    },
+    {
+      "probe": "launcher_supplied_file_fingerprint",
+      "scope": "conditional on launcher supplying its own __file__; not proven on user engine launch",
+      "gap_reproduced": true
+    },
+    {
+      "probe": "malformed_retry_ledger_stops_normal_run",
+      "exception": "TypeError: object of type 'NoneType' has no len()",
+      "continued": false,
+      "protected_bytes_unchanged": true,
+      "gap_reproduced": true
+    }
+  ]
+}
