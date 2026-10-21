@@ -173,14 +173,114 @@ def encode(value):
     return str(value.numerator) if value.denominator == 1 else str(value.numerator) + '/' + str(value.denominator)
 
 
+# ============================================================
+# Z0 TWO-PRIMITIVE ARITHMETIC CORE (experimental integration)
+# Arithmetic transitions: S(n)=n+1 and P(n)=n-1 only.
+# Fraction representation and normalization are structural rules.
+# The operation dispatcher retains its original API and Z0 routing.
+# ============================================================
+_Z0_PRIMITIVE_STEP_LIMIT = 20000
+_Z0_PRIMITIVE_EVIDENCE = []
+_Z0_DISCOVERED_SHORTCUTS = {}
+
+def _z0_walk(start, count, direction, evidence):
+    if count < 0 or direction not in ('S', 'P'):
+        raise ValueError('Invalid primitive walk')
+    if count > _Z0_PRIMITIVE_STEP_LIMIT:
+        raise OverflowError('Primitive walk exceeds bounded phone budget')
+    value = start
+    for index in range(count):
+        before = value
+        value = value + 1 if direction == 'S' else value - 1
+        if evidence is not None:
+            evidence.append((before, direction, value))
+    return value
+
+def _z0_integer_sum(a, b, evidence=None):
+    return _z0_walk(a, abs(b), 'S' if b >= 0 else 'P', evidence)
+
+def _z0_integer_negate(value, evidence=None):
+    return _z0_walk(0, abs(value), 'P' if value >= 0 else 'S', evidence)
+
+def _z0_integer_product(a, b, evidence=None):
+    if abs(b) > _Z0_PRIMITIVE_STEP_LIMIT:
+        raise OverflowError('Repeated construction exceeds bounded phone budget')
+    result = 0
+    increment = a if b >= 0 else _z0_integer_negate(a, evidence)
+    for _ in range(abs(b)):
+        result = _z0_integer_sum(result, increment, evidence)
+    return result
+
+def _z0_fraction_pair(value):
+    f = number(value)
+    return f.numerator, f.denominator
+
+def _z0_rational_construct(a, op, b, evidence=None):
+    an, ad = _z0_fraction_pair(a)
+    bn, bd = _z0_fraction_pair(b)
+    if op == '+':
+        numerator = _z0_integer_sum(_z0_integer_product(an, bd, evidence),
+                                    _z0_integer_product(bn, ad, evidence), evidence)
+        denominator = _z0_integer_product(ad, bd, evidence)
+    elif op == '-':
+        numerator = _z0_integer_sum(_z0_integer_product(an, bd, evidence),
+                                    _z0_integer_negate(_z0_integer_product(bn, ad, evidence), evidence), evidence)
+        denominator = _z0_integer_product(ad, bd, evidence)
+    elif op == '*':
+        numerator = _z0_integer_product(an, bn, evidence)
+        denominator = _z0_integer_product(ad, bd, evidence)
+    elif op == '/':
+        if bn == 0:
+            return None
+        numerator = _z0_integer_product(an, bd, evidence)
+        denominator = _z0_integer_product(ad, bn, evidence)
+    else:
+        raise ValueError('Unsupported operation')
+    return Fraction(numerator, denominator)
+
+def _z0_discover_shortcuts(min_evidence=3):
+    """Evidence-derived repeated-step motifs, not predeclared math operations."""
+    groups = {}
+    for entry in _Z0_PRIMITIVE_EVIDENCE:
+        steps = entry['steps']
+        for width in range(1, len(steps)//2 + 1):
+            if len(steps) % width:
+                continue
+            unit = tuple(steps[:width])
+            repetitions = len(steps)//width
+            if repetitions > 1 and unit * repetitions == tuple(steps):
+                groups.setdefault(unit, set()).add((repetitions, entry['trace_id']))
+    for unit, examples in groups.items():
+        if len({count for count, _ in examples}) >= min_evidence:
+            name = 'repeat_' + ''.join(unit)
+            _Z0_DISCOVERED_SHORTCUTS[name] = {
+                'unit': list(unit), 'evidence': sorted(examples),
+                'status': 'candidate_from_observed_primitive_paths'}
+    return _Z0_DISCOVERED_SHORTCUTS
+
 def _operate_rational_exact(a, op, b):
-    if op == '+': return a + b
-    if op == '-': return a - b
-    if op == '*': return a * b
-    if op == '/':
-        if b == 0: return None
-        return a / b
-    raise ValueError('Unsupported operation')
+    # Existing zero_core dispatch remains the single entry point.
+    # Preserve bounded runtime by falling back to exact legacy evaluation
+    # when primitive expansion exceeds the phone budget. Such fallbacks
+    # are NOT counted as emergent constructions.
+    evidence = []
+    try:
+        result = _z0_rational_construct(a, op, b, evidence)
+    except OverflowError:
+        if op == '+': return a + b
+        if op == '-': return a - b
+        if op == '*': return a * b
+        if op == '/': return None if b == 0 else a / b
+        raise ValueError('Unsupported operation')
+    if evidence and len(_Z0_PRIMITIVE_EVIDENCE) < 256:
+        _Z0_PRIMITIVE_EVIDENCE.append({
+            'trace_id': len(_Z0_PRIMITIVE_EVIDENCE) + 1,
+            'root': 'Z0', 'operation': op,
+            'operands': (str(a), str(b)), 'result': str(result),
+            'steps': [item[1] for item in evidence],
+            'edges': evidence[:1024], 'total_edges': len(evidence)})
+        _z0_discover_shortcuts()
+    return result
 
 
 def operate(a, op, b, tracking=None, context='arithmetic'):
