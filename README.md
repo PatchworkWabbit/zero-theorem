@@ -555,9 +555,6 @@ This project is licensed under the **GNU Affero General Public License v3 (AGPL-
 ---
 *Maintained by Patchwork Wabbit.*
 
-
-Licence: GNU General Public License v3.0 (GPLv3); see [LICENSE](LICENSE).
-
 ---
 
 Zero Theorem — Emergent Information Engine
