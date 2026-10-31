@@ -448,12 +448,26 @@ Contribution ideas, questions, and fixes are welcome; see [CONTRIBUTING.md](CONT
 
 # ──🔥 one-little-fire 🔥──
 
-> **LEGAL NOTICE: This repository is licensed under the GNU Affero General Public License v3 (AGPL-3.0).**
-
-### ⚠️ CORPORATE COMPLIANCE COMPLIANCE BANNER
-* **SAAS LOOPHOLE CLOSED:** Any modification, integration, or interaction with this software over a network **forces the network operator to make their entire application stack publicly available under the AGPLv3**.
-* **AI MODEL INFECTIVITY WARNING:** Ingesting, scraping, or processing this code to train or fine-tune commercial, proprietary large language models (LLMs) or autonomous coding agents without explicit written authorization constitutes a direct violation of copyright conditions, instantly revoking all rights to the code.
-* Any unauthorized commercial use or algorithmic laundering will be prosecuted under copyright law and tortious interference frameworks.
+> **LEGAL NOTICE:
+> # Copyright (C) 2026 Luke. Owner and inventor: Luke.
+#
+# Licensed under Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0).
+# https://creativecommons.org/licenses/by-nd/4.0/  (the LICENSE file in the repository is the licence text)
+# You may copy and share this work unchanged, with credit to Luke. You may not share changed versions of it.
+#
+# OWNERSHIP: Dragon Z, Mini Dragon, one little fire and the Zero Theorem engines are Luke's work. Owner and author of the ideas,
+# rules, design and direction: Luke T Branderhorst. Everything in this file belongs to Luke: the engine, its code, its
+# rules, its design, the ideas behind it, and everything it finds, produces or records. The design rules (everything
+# passes through the zero gate, nothing is rejected, nothing is lost, every record is stamped, and mathematics emerges
+# from Z0 and S) are Luke's. Nobody else owns, co-owns or has any claim over this work, its ideas, or anything it finds.
+#
+# NO CLAIM BY ANY TOOL OR COMPANY: ChatGPT and OpenAI, Claude and Anthropic, and every other AI tool, model, product or
+# company that Luke may have used while building this work have no ownership, no authorship and no credit in the
+# engines, their ideas, their rules, their design, or what they find. Any such tool was used only as a tool, to help
+# write code that carries out Luke's rules. No tool or company is a source, co-author or owner of this work.
+# Any file in this repository or its history that names a tool or company as a source or author of this work does so
+# in error and is not a claim of ownership.
+#
 
 ---
 
